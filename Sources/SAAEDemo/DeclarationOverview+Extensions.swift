@@ -1,5 +1,5 @@
 import Foundation
-import SAAE
+import SwiftButler
 
 extension DeclarationOverview {
     func toDictionary() -> [String: Any] {

@@ -1,7 +1,7 @@
 import Testing
 import Foundation
 import SwiftSyntax
-@testable import SAAE
+@testable import SwiftButler
 
 /// Test-specific errors
 enum TestError: Error {

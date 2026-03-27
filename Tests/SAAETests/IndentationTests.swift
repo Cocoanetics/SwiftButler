@@ -1,6 +1,6 @@
 import Testing
 import Foundation
-@testable import SAAE
+@testable import SwiftButler
 
 @Suite("Indentation Tests")
 struct IndentationTests {

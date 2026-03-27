@@ -4,7 +4,7 @@
 import PackageDescription
 
 let package = Package(
-	name: "SAAE",
+	name: "SwiftButler",
 	platforms: [
 		.macOS(.v10_15),
 		.iOS(.v13),
@@ -13,8 +13,8 @@ let package = Package(
 	],
 	products: [
 		.library(
-			name: "SAAE",
-			targets: ["SAAE"]),
+			name: "SwiftButler",
+			targets: ["SwiftButler"]),
 		.executable(
 			name: "butler",
 			targets: ["SAAEDemo"]),
@@ -26,25 +26,27 @@ let package = Package(
 	],
 	targets: [
 		.target(
-			name: "SAAE",
+			name: "SwiftButler",
 			dependencies: [
 				.product(name: "SwiftSyntax", package: "swift-syntax"),
 				.product(name: "SwiftParser", package: "swift-syntax"),
 				.product(name: "SwiftDiagnostics", package: "swift-syntax"),
 				.product(name: "SwiftParserDiagnostics", package: "swift-syntax"),
 				"Yams"
-			]),
+			],
+			path: "Sources/SAAE"),
 		.executableTarget(
 			name: "SAAEDemo",
 			dependencies: [
-				"SAAE",
+				"SwiftButler",
 				.product(name: "ArgumentParser", package: "swift-argument-parser")
 			]),
 		.testTarget(
 			name: "SAAETests",
 			dependencies: [
-				"SAAE"
+				"SwiftButler"
 			],
+			path: "Tests/SAAETests",
 			resources: [
 				.copy("Resources")
 			])

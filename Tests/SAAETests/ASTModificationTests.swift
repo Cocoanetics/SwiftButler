@@ -1,7 +1,7 @@
 import Testing
 import Foundation
 import SwiftSyntax
-@testable import SAAE
+@testable import SwiftButler
 
 struct Phase3_ASTModificationTests {
 

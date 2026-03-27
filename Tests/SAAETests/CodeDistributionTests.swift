@@ -1,6 +1,6 @@
 import Testing
 import Foundation
-@testable import SAAE
+@testable import SwiftButler
 
 @Suite("Phase 4: Code Distribution Tests")
 struct Phase4_CodeDistributionTests {
