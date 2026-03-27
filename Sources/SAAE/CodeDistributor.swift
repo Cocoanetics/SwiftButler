@@ -19,6 +19,7 @@ public class CodeDistributor {
         let overview = CodeOverview(tree: tree, minVisibility: .private) // Include all declarations
         let imports = overview.imports
         let declarations = overview.declarations
+        let fileHeader = extractFileHeader(from: tree.sourceFile)
 
 // Separate type vs non-type declarations
         var typeDeclarations: [DeclarationOverview] = []
@@ -58,7 +59,7 @@ public class CodeDistributor {
 // Build modified original file (for non-type code)
         var modifiedOriginalFile: GeneratedFile? = nil
         if !nonTypeDeclarations.isEmpty {
-            let content = try generateFileContent(imports: imports, targetDeclarations: nonTypeDeclarations, sourceFile: tree.sourceFile)
+            let content = try generateFileContent(imports: imports, targetDeclarations: nonTypeDeclarations, sourceFile: tree.sourceFile, fileHeader: fileHeader)
             modifiedOriginalFile = GeneratedFile(fileName: originalFileName, content: content, imports: imports, declarations: nonTypeDeclarations)
         }
 
@@ -224,8 +225,11 @@ public class CodeDistributor {
     }
 
 /// Generates the complete source file content for given imports and specific target declarations
-    internal func generateFileContent(imports: [String], targetDeclarations: [DeclarationOverview], sourceFile: SourceFileSyntax) throws -> String {
+    internal func generateFileContent(imports: [String], targetDeclarations: [DeclarationOverview], sourceFile: SourceFileSyntax, fileHeader: String = "") throws -> String {
         var content = ""
+        if !fileHeader.isEmpty {
+            content += fileHeader
+        }
 // Add imports
         if !imports.isEmpty {
             for importName in imports {
@@ -246,6 +250,14 @@ public class CodeDistributor {
             }
         }
         return content
+    }
+
+    /// Preserves file-level leading trivia such as the swift-tools-version marker.
+    internal func extractFileHeader(from sourceFile: SourceFileSyntax) -> String {
+        guard let firstToken = sourceFile.firstToken(viewMode: .sourceAccurate) else {
+            return ""
+        }
+        return firstToken.leadingTrivia.description
     }
 
 /// Generates source text for a declaration (without import headers)

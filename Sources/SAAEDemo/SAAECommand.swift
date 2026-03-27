@@ -12,16 +12,16 @@ import Glibc
 extension OutputFormat: ExpressibleByArgument {}
 extension VisibilityLevel: ExpressibleByArgument {}
 
-/// SAAE Demo - Swift AST Abstractor & Editor
+/// Butler - Swift source analysis and refactoring CLI
 ///
-/// This demo application showcases SAAE's ability to parse Swift source code
-/// and generate clean, structured overviews in various formats.
+/// This executable exposes SAAE's source analysis, syntax checking,
+/// and refactoring tools behind a command-line interface.
 @main
-struct SAAECommand: AsyncParsableCommand {
+struct ButlerCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
-        commandName: "SAAEDemo",
-        abstract: "A utility for analyzing Swift source code and generating API overviews",
-        subcommands: [AnalyzeCommand.self, ErrorsCommand.self, DistributeCommand.self, ReindentCommand.self],
+        commandName: "butler",
+        abstract: "Swift source tooling for analysis, syntax checking, and refactoring",
+        subcommands: [AnalyzeCommand.self, SyntaxCheckCommand.self, DistributeCommand.self, ReindentCommand.self],
         defaultSubcommand: AnalyzeCommand.self
     )
 }
@@ -37,14 +37,14 @@ struct AnalyzeCommand: AsyncParsableCommand {
   Perfect for efficiently providing LLMs with comprehensive API overviews instead of overwhelming them with entire codebases.
   
   Examples:
-    SAAEDemo analyze Sources/SAAE/SAAE.swift
-    SAAEDemo analyze Sources/SAAE/*.swift -f json
-    SAAEDemo analyze Sources/SAAE --format markdown
-    SAAEDemo analyze Sources/SAAE                          # Files in Sources/SAAE only
-    SAAEDemo analyze Sources -r -f yaml                    # All files in Sources and subdirectories
-    SAAEDemo analyze Sources/SAAE -v public -f interface   # Only public and open declarations
-    SAAEDemo analyze Sources/SAAE --visibility private     # All declarations including private
-    SAAEDemo analyze file1.swift file2.swift -f yaml
+    butler analyze Sources/SAAE/SAAE.swift
+    butler analyze Sources/SAAE/*.swift -f json
+    butler analyze Sources/SAAE --format markdown
+    butler analyze Sources/SAAE                          # Files in Sources/SAAE only
+    butler analyze Sources -r -f yaml                    # All files in Sources and subdirectories
+    butler analyze Sources/SAAE -v public -f interface   # Only public and open declarations
+    butler analyze Sources/SAAE --visibility private     # All declarations including private
+    butler analyze file1.swift file2.swift -f yaml
 """
     )
 
@@ -64,9 +64,6 @@ struct AnalyzeCommand: AsyncParsableCommand {
     var output: String?
 
     func run() async throws {
-        print("🚀 SAAE (Swift AST Abstractor & Editor) Demo")
-        print("=============================================\n")
-
         let analyzer = SAAEAnalyzer(
             paths: paths,
             format: format,
@@ -85,7 +82,7 @@ struct AnalyzeCommand: AsyncParsableCommand {
     }
 }
 
-// MARK: - Errors Subcommand (New Phase 2 functionality)
+// MARK: - Syntax Check Subcommand
 
 enum ErrorOutputFormat: String, CaseIterable, ExpressibleByArgument {
     case json
@@ -99,23 +96,21 @@ enum ErrorOutputFormat: String, CaseIterable, ExpressibleByArgument {
 }
 }
 
-struct ErrorsCommand: AsyncParsableCommand {
+struct SyntaxCheckCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
-        commandName: "errors",
-        abstract: "Detect and report syntax errors in Swift source files",
+        commandName: "check",
+        abstract: "Check one or more Swift files for syntax errors",
         discussion: """
-  Analyze Swift source files for syntax errors and output detailed error information in JSON or Markdown format.
-  This uses SAAE's Phase 2 syntax error detection capabilities to provide comprehensive error reports.
+  Analyze Swift source files for syntax errors. This command accepts one or more files or directories,
+  and can recurse into directories with --recursive.
   
   Examples:
-    SAAEDemo errors file.swift                     # Check single file (JSON output)
-    SAAEDemo errors *.swift                        # Check multiple files
-    SAAEDemo errors Sources/ --recursive           # Check directory recursively
-    SAAEDemo errors file.swift --output errors.json  # Save JSON to file
-    SAAEDemo errors file.swift --format markdown  # Markdown output
-    SAAEDemo errors file.swift -f markdown -o errors.md  # Save Markdown to file
-    SAAEDemo errors file.swift --pretty            # Pretty-print JSON
-    SAAEDemo errors file.swift --show-fixits       # Show fix-it suggestions (like swiftc -fixit)
+    butler check file.swift
+    butler check *.swift
+    butler check Sources/ --recursive
+    butler check Sources/ --recursive --json
+    butler check file.swift --json --output errors.json
+    butler check file.swift --format markdown --show-fixits
 """
     )
 
@@ -129,7 +124,10 @@ struct ErrorsCommand: AsyncParsableCommand {
     var output: String?
 
     @Option(name: .shortAndLong, help: "Output format")
-    var format: ErrorOutputFormat = .json
+    var format: ErrorOutputFormat = .markdown
+
+    @Flag(help: "Emit JSON output")
+    var json: Bool = false
 
     @Flag(help: "Pretty-print JSON output (ignored for markdown)")
     var pretty: Bool = false
@@ -138,17 +136,13 @@ struct ErrorsCommand: AsyncParsableCommand {
     var showFixits: Bool = false
 
     func run() async throws {
-        print("🔍 SAAE Syntax Error Detection")
-        print("==============================\n")
-
         let swiftFiles = try collectSwiftFiles(from: paths, recursive: recursive)
+        let selectedFormat: ErrorOutputFormat = json ? .json : format
 
         if swiftFiles.isEmpty {
             print("❌ No Swift files found in the specified paths.")
             throw ExitCode.failure
         }
-
-        print("📁 Found \(swiftFiles.count) Swift file(s) to analyze...")
 
         var allErrors: [FileErrorReport] = []
         var totalErrorCount = 0
@@ -169,13 +163,9 @@ struct ErrorsCommand: AsyncParsableCommand {
                     )
                 allErrors.append(report)
                 totalErrorCount += errors.count
-                print("❌ \(filePath): \(errors.count) error(s)")
-            } else {
-                print("✅ \(filePath): No errors")
             }
 
         } catch {
-            print("⚠️  \(filePath): Failed to analyze - \(error)")
             let report = FileErrorReport(
                     filePath: filePath,
                     fileName: url.lastPathComponent,
@@ -196,7 +186,7 @@ struct ErrorsCommand: AsyncParsableCommand {
 
 // Generate output based on format
         let outputContent: String
-        switch format {
+        switch selectedFormat {
             case .json:
                 outputContent = try generateJSONOutput(summary: summary)
             case .markdown:
@@ -205,24 +195,14 @@ struct ErrorsCommand: AsyncParsableCommand {
 
         if let outputPath = output {
             try outputContent.write(to: URL(fileURLWithPath: outputPath), atomically: true, encoding: .utf8)
-            print("\n✅ Error report written to: \(outputPath)")
         } else {
-            switch format {
-                case .json:
-                    print("\n📋 Error Report JSON:")
-                case .markdown:
-                    print("\n📋 Error Report Markdown:")
-            }
             print(outputContent)
         }
 
 // Exit with error code if syntax errors were found
-        if totalErrorCount > 0 && format == .json {
-            print("\n❌ Found \(totalErrorCount) syntax error(s) across \(allErrors.filter { $0.errorCount > 0 }.count) file(s)")
+        if totalErrorCount > 0 {
             throw ExitCode.failure
-        } else if totalErrorCount == 0 && format == .json {
-                print("\n✅ No syntax errors found!")
-            }
+        }
     }
 
     private func generateJSONOutput(summary: ErrorSummary) throws -> String {
@@ -347,9 +327,9 @@ struct DistributeCommand: AsyncParsableCommand {
   By default, writes to an output directory (or prints to stdout if not specified).
   
   Examples:
-    SAAEDemo distribute MyFile.swift
-    SAAEDemo distribute Sources/ --recursive -o SplitSources
-    SAAEDemo distribute file1.swift file2.swift -o out
+    butler distribute MyFile.swift
+    butler distribute Sources/ --recursive -o SplitSources
+    butler distribute file1.swift file2.swift -o out
 """
     )
 
@@ -583,11 +563,11 @@ struct ReindentCommand: AsyncParsableCommand {
   where case labels are indented deeper than the switch itself.
   
   Examples:
-    SAAEDemo reindent MyFile.swift                         # Reindent single file with 4-space indentation
-    SAAEDemo reindent MyFile.swift --indent-size 2         # Use 2-space indentation
-    SAAEDemo reindent Sources/ --recursive                 # Reindent all Swift files in Sources recursively
-    SAAEDemo reindent file1.swift file2.swift --dry-run   # Show what would be changed without modifying files
-    SAAEDemo reindent Sources/ -r -s 2                     # Short form: recursive with 2-space indentation
+    butler reindent MyFile.swift                         # Reindent single file with 4-space indentation
+    butler reindent MyFile.swift --indent-size 2         # Use 2-space indentation
+    butler reindent Sources/ --recursive                 # Reindent all Swift files in Sources recursively
+    butler reindent file1.swift file2.swift --dry-run   # Show what would be changed without modifying files
+    butler reindent Sources/ -r -s 2                     # Short form: recursive with 2-space indentation
 """
     )
 

@@ -16,7 +16,7 @@ let package = Package(
 			name: "SAAE",
 			targets: ["SAAE"]),
 		.executable(
-			name: "SAAEDemo",
+			name: "butler",
 			targets: ["SAAEDemo"]),
 	],
 	dependencies: [
@@ -47,9 +47,6 @@ let package = Package(
 			],
 			resources: [
 				.copy("Resources")
-			]),
-		.executableTarget(
-			name: "DebugExec",
-			dependencies: ["SAAE"])
+			])
 	]
 )

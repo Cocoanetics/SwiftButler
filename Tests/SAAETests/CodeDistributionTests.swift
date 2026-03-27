@@ -212,4 +212,42 @@ struct Phase4_CodeDistributionTests {
         #expect(originalContent.contains("typealias StringMap"))
         #expect(originalContent.contains("import Foundation"))
     }
-} 
+
+    @Test("Preserve file header comments when rewriting original file")
+    func distributeDeclarations_preservesFileHeaderComments() throws {
+        let sourceCode = """
+        // swift-tools-version: 6.0
+        // Package manifest comment that must survive distribution
+
+        import PackageDescription
+
+        let package = Package(
+            name: "Example",
+            targets: []
+        )
+
+        struct Helper {}
+        """
+
+        let tree = try SyntaxTree(string: sourceCode)
+        let distributor = CodeDistributor()
+
+        let result = try distributor.distributeKeepingFirst(tree: tree, originalFileName: "Package.swift")
+
+        let originalFile = try #require(result.modifiedOriginalFile)
+        let originalContent = originalFile.content
+
+        #expect(originalContent.hasPrefix("""
+        // swift-tools-version: 6.0
+        // Package manifest comment that must survive distribution
+
+        import PackageDescription
+        """))
+        #expect(originalContent.contains("let package = Package("))
+
+        let filesByName: [String: GeneratedFile] = Dictionary(uniqueKeysWithValues: result.newFiles.map { ($0.fileName, $0) })
+        let helperFile = try #require(filesByName["Helper.swift"])
+        #expect(helperFile.content.contains("struct Helper"))
+        #expect(!helperFile.content.hasPrefix("// swift-tools-version: 6.0"))
+    }
+}
