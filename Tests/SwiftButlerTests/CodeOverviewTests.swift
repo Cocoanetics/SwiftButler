@@ -8,7 +8,7 @@ enum TestError: Error {
     case resourcesNotFound(String)
 }
 
-/// Helper function that generates a code overview using the proper SAAE API.
+/// Helper function that generates a code overview using the proper SwiftButler API.
 /// This replaces the temporary stub and uses the actual CodeOverview implementation.
 func generateOverview(string: String, format: OutputFormat, minVisibility: VisibilityLevel? = nil) throws -> String {
     let tree = try SyntaxTree(string: string)
@@ -204,24 +204,24 @@ struct Phase1_2_CodeOverviewTests {
     @Test func fileNotFoundError() throws {
         let nonExistentURL = URL(fileURLWithPath: "/nonexistent/file.swift")
         
-        #expect(throws: SAAEError.self) {
+        #expect(throws: SwiftButlerError.self) {
             try SyntaxTree(url: nonExistentURL)
         }
         
         // More specific error checking
         do {
             _ = try SyntaxTree(url: nonExistentURL)
-            Issue.record("Expected SAAEError.fileNotFound to be thrown")
-        } catch let error as SAAEError {
+            Issue.record("Expected SwiftButlerError.fileNotFound to be thrown")
+        } catch let error as SwiftButlerError {
             switch error {
             case .fileNotFound:
                 // Expected error
                 break
             default:
-                Issue.record("Expected SAAEError.fileNotFound, got \(error)")
+                Issue.record("Expected SwiftButlerError.fileNotFound, got \(error)")
             }
         } catch {
-            Issue.record("Expected SAAEError.fileNotFound, got \(error)")
+            Issue.record("Expected SwiftButlerError.fileNotFound, got \(error)")
         }
     }
     
@@ -367,7 +367,7 @@ struct Phase1_2_CodeOverviewTests {
     }
     
     @Test func unexpectedCodePositioningAccuracy() throws {
-        // This test validates that when SAAE reports "unexpected code 'X'" at line Y, column Z,
+        // This test validates that when SwiftButler reports "unexpected code 'X'" at line Y, column Z,
         // the code 'X' actually exists at that exact position in the source file
         
         let swiftFiles = try getAllErrorSampleFiles()

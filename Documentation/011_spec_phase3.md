@@ -1,26 +1,26 @@
 
-**Project Name:** SAAE (Swift AST Abstractor & Editor) - Phase 3: Targeted AST Modifications
+**Project Name:** SwiftButler (Swift AST Abstractor & Editor) - Phase 3: Targeted AST Modifications
 
 **Version:** 3.0
 
 **Date:** October 26, 2023 (Spec Date)
 
 **Prerequisite:**
-*   Successful completion of SAAE Phase 1: Read-Only AST Overview & LLM Context Building. SAAE can parse Swift code into an immutable `SyntaxTree` and generate detailed structural overviews (e.g., via `CodeOverview.generate_overview()`).
-*   Successful completion of SAAE Phase 2: Syntax Error Reporting. SAAE's `SyntaxTree` can report detailed syntax errors within it (via `SyntaxTree.getDiagnostics() -> [SAAEDiagnostic]`).
+*   Successful completion of SwiftButler Phase 1: Read-Only AST Overview & LLM Context Building. SwiftButler can parse Swift code into an immutable `SyntaxTree` and generate detailed structural overviews (e.g., via `CodeOverview.generate_overview()`).
+*   Successful completion of SwiftButler Phase 2: Syntax Error Reporting. SwiftButler's `SyntaxTree` can report detailed syntax errors within it (via `SyntaxTree.getDiagnostics() -> [SAAEDiagnostic]`).
 
 **Goal:**
-To empower SAAE with reliable and well-tested capabilities to perform targeted modifications on a Swift `SyntaxTree`. This includes adding/updating documentation (leading trivia), replacing existing syntax nodes with new pre-validated `Syntax` objects, deleting nodes, and inserting new pre-validated `Syntax` objects relative to existing ones. Operations will be addressable via node sequence paths. All modifications will result in a new, immutable `SyntaxTree` state, which can then be serialized back to Swift source code. This phase provides the foundational editing primitives for programmatic code manipulation.
+To empower SwiftButler with reliable and well-tested capabilities to perform targeted modifications on a Swift `SyntaxTree`. This includes adding/updating documentation (leading trivia), replacing existing syntax nodes with new pre-validated `Syntax` objects, deleting nodes, and inserting new pre-validated `Syntax` objects relative to existing ones. Operations will be addressable via node sequence paths. All modifications will result in a new, immutable `SyntaxTree` state, which can then be serialized back to Swift source code. This phase provides the foundational editing primitives for programmatic code manipulation.
 
 **1. Core Principles:**
 
 *   **Immutability:** All modification functions will take a `SyntaxTree` as input and return a *new* `SyntaxTree` instance representing the modified AST. The original `SyntaxTree` remains unchanged.
-*   **Addressability via Node Path:** Modifications will target nodes identified by their `path` (a sequence-based path string, e.g., `"1.3.2"`) as obtainable from SAAE's Phase 1 overview generation. The caller is responsible for ensuring the `path` is valid for the input `SyntaxTree`.
-*   **Pre-Validated Inputs:** Functions that introduce new Swift code structures (`replaceNode`, `insertNodes`) will expect these new structures to be provided as already parsed and syntactically validated `swift-syntax` `Syntax` objects (or collections thereof). The SAAE client/orchestrator is responsible for this pre-validation (e.g., by parsing a string from an LLM into a temporary `SyntaxTree` and checking its diagnostics using SAAE Phase 2's `getDiagnostics()` method).
-*   **Syntactic Focus:** Modifications are primarily syntactic. SAAE Phase 3 aims to produce syntactically valid ASTs based on valid inputs. Full semantic correctness (e.g., type checking across a project) is out of scope.
+*   **Addressability via Node Path:** Modifications will target nodes identified by their `path` (a sequence-based path string, e.g., `"1.3.2"`) as obtainable from SwiftButler's Phase 1 overview generation. The caller is responsible for ensuring the `path` is valid for the input `SyntaxTree`.
+*   **Pre-Validated Inputs:** Functions that introduce new Swift code structures (`replaceNode`, `insertNodes`) will expect these new structures to be provided as already parsed and syntactically validated `swift-syntax` `Syntax` objects (or collections thereof). The SwiftButler client/orchestrator is responsible for this pre-validation (e.g., by parsing a string from an LLM into a temporary `SyntaxTree` and checking its diagnostics using SwiftButler Phase 2's `getDiagnostics()` method).
+*   **Syntactic Focus:** Modifications are primarily syntactic. SwiftButler Phase 3 aims to produce syntactically valid ASTs based on valid inputs. Full semantic correctness (e.g., type checking across a project) is out of scope.
 *   **Leverage `SyntaxRewriter`:** Apple's `swift-syntax` `SyntaxRewriter` class will be the primary mechanism for implementing AST transformations.
 
-**2. Core SAAE Modification Functions:**
+**2. Core SwiftButler Modification Functions:**
 
 These functions will likely be methods on the `SyntaxTree` struct or top-level functions that operate on `SyntaxTree` instances.
 
@@ -80,22 +80,22 @@ These functions will likely be methods on the `SyntaxTree` struct or top-level f
 		/// A generic failure occurred during the AST modification process.
 		case astModificationFailed(reason: String)
 		// Note: Errors related to parsing new code snippets are now handled by the client
-		// using SAAE Phase 2's `SyntaxTree.getDiagnostics()` *before* calling these Phase 3 functions.
+		// using SwiftButler Phase 2's `SyntaxTree.getDiagnostics()` *before* calling these Phase 3 functions.
 	}
 	```
 
 **3. Workflow for Client/LLM Interaction (Example with `replaceNode`):**
 
 1.  **LLM generates `newSwiftCodeString`** intended to replace a node at `targetPath` in `currentTree: SyntaxTree`.
-2.  **Client/Orchestrator (using SAAE Phase 2):**
+2.  **Client/Orchestrator (using SwiftButler Phase 2):**
 	a.  `let snippetTree = try SyntaxTree(string: newSwiftCodeString, fileNameForDiagnostics: "llm_snippet.swift")`
 	b.  `let snippetDiagnostics = snippetTree.getDiagnostics()`
 	c.  **If `snippetDiagnostics` contains errors:** Send these errors (e.g., `[SAAEDiagnostic]`) back to the LLM for correction. LLM provides corrected code. Repeat from step 2a.
-3.  **Client/Orchestrator (using SAAE Phase 3, if snippet is clean):**
+3.  **Client/Orchestrator (using SwiftButler Phase 3, if snippet is clean):**
 	a.  Extract the relevant `Syntax` node(s) from `snippetTree.sourceFile` (e.g., the first statement if it's a single declaration: `guard let replacementNode = snippetTree.sourceFile.statements.first?.item else { /* error: snippet empty or not a single item */ }`).
 	b.  `let resultTree = try currentTree.replaceNode(atPath: targetPath, withNewNode: replacementNode)`
 	c.  `currentTree = resultTree`
-4.  Client handles potential `NodeOperationError`s from the SAAE Phase 3 call (e.g., `.invalidReplacementContext`).
+4.  Client handles potential `NodeOperationError`s from the SwiftButler Phase 3 call (e.g., `.invalidReplacementContext`).
 5.  Client can now `currentTree.serializeToCode()` to get the updated source string.
 
 **4. Serialization:**
@@ -115,23 +115,23 @@ A comprehensive suite of unit tests must validate each modification function, fo
 **6. Technical Considerations:**
 
 *   **`SyntaxRewriter` Implementation:** Custom `SyntaxRewriter` subclasses will be the core of implementing these transformations. They need to correctly identify target nodes via paths and perform structural changes to collections (e.g., `CodeBlockItemListSyntax`, `MemberDeclListSyntax`).
-*   **Path Resolution in Rewrites:** For simplicity in Phase 3, each public SAAE modification function should ideally perform a single conceptual rewrite pass. If a single operation involves multiple internal changes that could shift paths, careful path management or re-resolution within that operation will be needed.
+*   **Path Resolution in Rewrites:** For simplicity in Phase 3, each public SwiftButler modification function should ideally perform a single conceptual rewrite pass. If a single operation involves multiple internal changes that could shift paths, careful path management or re-resolution within that operation will be needed.
 *   **Trivia Handling:** Special attention must be paid to preserving or intelligently adjusting trivia (whitespace, comments) around modified, inserted, or deleted nodes to maintain readable and well-formatted output code.
 
 **7. Deliverables:**
 
-7.1. Updated SAAE Swift library with the new Phase 3 modification functions and supporting types (e.g., `InsertionPosition`, `NodeOperationError`).
+7.1. Updated SwiftButler Swift library with the new Phase 3 modification functions and supporting types (e.g., `InsertionPosition`, `NodeOperationError`).
 7.2. A comprehensive suite of unit tests as outlined, demonstrating the correctness and robustness of each AST modification operation.
-7.3. Updated SAAE documentation (README, API documentation) for Phase 3 functionalities, including clear examples of the two-step workflow (client validates snippet, then calls SAAE to modify).
+7.3. Updated SwiftButler documentation (README, API documentation) for Phase 3 functionalities, including clear examples of the two-step workflow (client validates snippet, then calls SwiftButler to modify).
 
 **8. Non-Goals for Phase 3:**
 
-*   SAAE performing syntax validation of raw code strings *within* the modification functions themselves (this is delegated to the client using Phase 2 tools).
+*   SwiftButler performing syntax validation of raw code strings *within* the modification functions themselves (this is delegated to the client using Phase 2 tools).
 *   Full semantic analysis or integration with SourceKit-LSP.
 *   Automatic, complex import management (beyond the basic `import OSLog` from Phase 2).
-*   Complex, multi-stage refactorings (e.g., "Rename Symbol Project-Wide") as single SAAE operations. SAAE provides the primitives for such orchestrations.
+*   Complex, multi-stage refactorings (e.g., "Rename Symbol Project-Wide") as single SwiftButler operations. SwiftButler provides the primitives for such orchestrations.
 *   Automatic code formatting beyond `swift-syntax`'s default serialization behavior.
 
 ---
 
-This self-contained Phase 3 specification clearly defines the scope, responsibilities, and critical testing requirements, setting the stage for building powerful yet focused AST editing capabilities within SAAE.
+This self-contained Phase 3 specification clearly defines the scope, responsibilities, and critical testing requirements, setting the stage for building powerful yet focused AST editing capabilities within SwiftButler.

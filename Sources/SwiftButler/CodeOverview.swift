@@ -3,7 +3,7 @@ import Yams
 
 /// Provides a comprehensive analysis and overview of Swift source code.
 ///
-/// `CodeOverview` serves as the primary analysis engine for SAAE, parsing Swift syntax trees
+/// `CodeOverview` serves as the primary analysis engine for SwiftButler, parsing Swift syntax trees
 /// and extracting structured information about declarations, imports, and documentation.
 /// It supports multiple output formats and configurable visibility filtering.
 ///

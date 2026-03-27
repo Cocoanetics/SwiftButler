@@ -8,16 +8,16 @@ import Darwin
 import Glibc
 #endif
 
-// ArgumentParser conformance for SAAE types
+// ArgumentParser conformance for SwiftButler types
 extension OutputFormat: ExpressibleByArgument {}
 extension VisibilityLevel: ExpressibleByArgument {}
 
 /// Butler - Swift source analysis and refactoring CLI
 ///
-/// This executable exposes SAAE's source analysis, syntax checking,
+/// This executable exposes SwiftButler's source analysis, syntax checking,
 /// and refactoring tools behind a command-line interface.
 @main
-struct ButlerCommand: AsyncParsableCommand {
+struct SwiftButlerCLI: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "butler",
         abstract: "Swift source tooling for analysis, syntax checking, and refactoring",
@@ -26,7 +26,7 @@ struct ButlerCommand: AsyncParsableCommand {
     )
 }
 
-// MARK: - Analyze Subcommand (Original functionality)
+// MARK: - Analyze Subcommand
 
 struct AnalyzeCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
@@ -37,13 +37,13 @@ struct AnalyzeCommand: AsyncParsableCommand {
   Perfect for efficiently providing LLMs with comprehensive API overviews instead of overwhelming them with entire codebases.
   
   Examples:
-    butler analyze Sources/SAAE/SAAE.swift
-    butler analyze Sources/SAAE/*.swift -f json
-    butler analyze Sources/SAAE --format markdown
-    butler analyze Sources/SAAE                          # Files in Sources/SAAE only
+    butler analyze Sources/SwiftButler
+    butler analyze Sources/SwiftButler/*.swift -f json
+    butler analyze Sources/SwiftButler --format markdown
+    butler analyze Sources/SwiftButler                          # Files in Sources/SwiftButler only
     butler analyze Sources -r -f yaml                    # All files in Sources and subdirectories
-    butler analyze Sources/SAAE -v public -f interface   # Only public and open declarations
-    butler analyze Sources/SAAE --visibility private     # All declarations including private
+    butler analyze Sources/SwiftButler -v public -f interface   # Only public and open declarations
+    butler analyze Sources/SwiftButler --visibility private     # All declarations including private
     butler analyze file1.swift file2.swift -f yaml
 """
     )
@@ -64,7 +64,7 @@ struct AnalyzeCommand: AsyncParsableCommand {
     var output: String?
 
     func run() async throws {
-        let analyzer = SAAEAnalyzer(
+        let analyzer = SwiftButlerAnalyzer(
             paths: paths,
             format: format,
             visibility: visibility,
@@ -584,7 +584,7 @@ struct ReindentCommand: AsyncParsableCommand {
     var dryRun: Bool = false
 
     func run() async throws {
-        print("🔧 SAAE Indentation Fixer")
+        print("🔧 SwiftButler Indentation Fixer")
         print("=========================\n")
 
         guard indentSize > 0 && indentSize <= 16 else {

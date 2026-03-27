@@ -1,6 +1,6 @@
 import Foundation
 
-extension SAAEError: LocalizedError {
+extension SwiftButlerError: LocalizedError {
 /// Provides a localized description of the error for user presentation.
 ///
 /// - Returns: A human-readable error message describing what went wrong.

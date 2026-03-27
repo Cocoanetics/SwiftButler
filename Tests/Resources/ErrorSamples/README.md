@@ -1,6 +1,6 @@
 # Swift Syntax Error Samples
 
-This directory contains Swift files with intentional syntax errors to demonstrate SAAE's Phase 2 error detection capabilities. Each file showcases different categories of common Swift syntax mistakes.
+This directory contains Swift files with intentional syntax errors to demonstrate SwiftButler's Phase 2 error detection capabilities. Each file showcases different categories of common Swift syntax mistakes.
 
 ## Error Sample Files
 

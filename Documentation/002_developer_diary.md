@@ -1,12 +1,12 @@
-# SAAE Phase 1 Developer Diary
+# SwiftButler Phase 1 Developer Diary
 
-**Project:** Swift AST Abstractor & Editor (SAAE) - Phase 1  
+**Project:** Swift AST Abstractor & Editor (SwiftButler) - Phase 1  
 **Date:** May 29, 2025  
 **Status:** ✅ Complete  
 
 ## Project Overview
 
-Successfully implemented Phase 1 of SAAE, a Swift library that parses Swift source code and generates structured overviews of declarations. The implementation provides read-only analysis capabilities with multiple output formats.
+Successfully implemented Phase 1 of SwiftButler, a Swift library that parses Swift source code and generates structured overviews of declarations. The implementation provides read-only analysis capabilities with multiple output formats.
 
 ## Implementation Steps
 
@@ -14,17 +14,17 @@ Successfully implemented Phase 1 of SAAE, a Swift library that parses Swift sour
 
 **Created Swift Package Manager structure:**
 - `Package.swift` with dependencies on `swift-syntax` (509.0.0+) and `Yams` (5.0.0+)
-- Standard SPM directory structure: `Sources/SAAE/`, `Tests/SAAETests/`
+- Standard SPM directory structure: `Sources/SwiftButler/`, `Tests/SwiftButlerTests/`
 - Multi-platform support (macOS 10.15+, iOS 13+, tvOS 13+, watchOS 6+)
 
 **Key architectural decisions:**
 - Opaque `ASTHandle` type for parsed AST storage
-- Shared SAAE instance for global function API
+- Shared SwiftButler instance for global function API
 - Visitor pattern for AST traversal using `swift-syntax`
 
 ### 2. Core Type System 📋
 
-**Implemented in `Sources/SAAE/Types.swift`:**
+**Implemented in `Sources/SwiftButler/Types.swift`:**
 - `OutputFormat` enum: `.json`, `.yaml`, `.markdown`
 - `VisibilityLevel` enum with proper comparison support
 - `ASTHandle` struct with UUID-based identification
@@ -38,10 +38,10 @@ Successfully implemented Phase 1 of SAAE, a Swift library that parses Swift sour
 
 ### 3. AST Parsing & Storage 🔍
 
-**Implemented in `Sources/SAAE/SAAE.swift`:**
+**Implemented in `Sources/SwiftButler/SwiftButler.swift`:**
 - `parse(from_url:)` and `parse(from_string:)` functions
 - Internal AST storage using UUID mapping
-- Error handling with custom `SAAEError` enum
+- Error handling with custom `SwiftButlerError` enum
 - Output generation for JSON, YAML, and Markdown formats
 
 **Key features:**
@@ -52,7 +52,7 @@ Successfully implemented Phase 1 of SAAE, a Swift library that parses Swift sour
 
 ### 4. AST Traversal Engine 🚶‍♂️
 
-**Implemented in `Sources/SAAE/DeclarationVisitor.swift`:**
+**Implemented in `Sources/SwiftButler/DeclarationVisitor.swift`:**
 - Custom `SyntaxVisitor` subclass for declaration extraction
 - Comprehensive declaration type support:
   - Container types: `struct`, `class`, `enum`, `protocol`, `extension`
@@ -68,14 +68,14 @@ Successfully implemented Phase 1 of SAAE, a Swift library that parses Swift sour
 
 ### 5. Public API Design 🌐
 
-**Implemented in `Sources/SAAE/SAAE+Public.swift`:**
+**Implemented in `Sources/SwiftButler/SwiftButler+Public.swift`:**
 - Global functions matching specification requirements
 - Shared instance pattern for AST storage persistence
 - Clean API surface: `parse()` → `generate_overview()`
 
 ### 6. Comprehensive Testing 🧪
 
-**Implemented in `Tests/SAAETests/SAAETests.swift`:**
+**Implemented in `Tests/SwiftButlerTests/SwiftButlerTests.swift`:**
 - **11 test cases** covering all major functionality:
   - Basic parsing from strings and files
   - All three output formats (JSON, YAML, Markdown)
@@ -93,7 +93,7 @@ Successfully implemented Phase 1 of SAAE, a Swift library that parses Swift sour
 **Created comprehensive documentation:**
 - `README.md` with full API reference and examples
 - `Example.swift` demonstrating rich Swift code with documentation
-- `Sources/SAAEDemo/main.swift` - working demo application
+- `Sources/SwiftButlerCLI/main.swift` - working demo application
 
 **Demo application showcases:**
 - Real-time parsing of complex Swift code

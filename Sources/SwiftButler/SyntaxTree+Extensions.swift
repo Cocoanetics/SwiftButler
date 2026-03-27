@@ -179,7 +179,7 @@ extension SyntaxTree {
 ///
 /// - Parameter indentSize: Number of spaces per indentation level (default: 4)
 /// - Returns: A new SyntaxTree with consistent indentation applied
-/// - Throws: SAAEError if the reindented code cannot be parsed
+/// - Throws: SwiftButlerError if the reindented code cannot be parsed
 ///
 /// ## Features
 ///

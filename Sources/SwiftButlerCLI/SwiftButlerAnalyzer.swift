@@ -1,12 +1,12 @@
 import Foundation
 import SwiftButler
 
-/// Handles the analysis of Swift source code files using the appropriate SAAE components.
+/// Handles the analysis of Swift source code files using the appropriate SwiftButler components.
 ///
-/// This analyzer coordinates between single-file analysis using the SAAE class
+/// This analyzer coordinates between single-file analysis
 /// and multi-file analysis using ProjectOverview, providing a unified interface
 /// for the command-line tool.
-class SAAEAnalyzer {
+final class SwiftButlerAnalyzer {
     let paths: [String]
     let format: OutputFormat
     let visibility: VisibilityLevel
@@ -23,13 +23,13 @@ class SAAEAnalyzer {
         let fileURLs = try discoverFiles()
 
         guard !fileURLs.isEmpty else {
-        throw NSError(domain: "SAAE", code: 1, userInfo: [NSLocalizedDescriptionKey: "No Swift files found in the specified paths"])
+        throw NSError(domain: "SwiftButler", code: 1, userInfo: [NSLocalizedDescriptionKey: "No Swift files found in the specified paths"])
     }
 
         let relevantFiles = fileURLs.filter { hasMatchingDeclarations($0, minVisibility: visibility) }
 
         if relevantFiles.isEmpty {
-            throw NSError(domain: "SAAE", code: 2, userInfo: [NSLocalizedDescriptionKey: "No files found with \(visibility.rawValue) or higher visibility declarations"])
+            throw NSError(domain: "SwiftButler", code: 2, userInfo: [NSLocalizedDescriptionKey: "No files found with \(visibility.rawValue) or higher visibility declarations"])
         }
 
         return try await processFiles(relevantFiles)
@@ -53,7 +53,7 @@ class SAAEAnalyzer {
             var isDirectory: ObjCBool = false
 
             guard fileManager.fileExists(atPath: url.path, isDirectory: &isDirectory) else {
-            throw NSError(domain: "SAAE", code: 3, userInfo: [NSLocalizedDescriptionKey: "Path does not exist: \(inputPath)"])
+            throw NSError(domain: "SwiftButler", code: 3, userInfo: [NSLocalizedDescriptionKey: "Path does not exist: \(inputPath)"])
         }
 
             if isDirectory.boolValue {

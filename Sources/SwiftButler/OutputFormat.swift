@@ -15,8 +15,8 @@ import Foundation
 /// ## Usage
 ///
 /// ```swift
-/// let saae = SAAE()
-/// let result = try saae.generateOverview(
+/// let swiftButler = SwiftButler()
+/// let result = try swiftButler.generateOverview(
 ///     url: fileURL, 
 ///     format: .markdown, 
 ///     minVisibility: .public

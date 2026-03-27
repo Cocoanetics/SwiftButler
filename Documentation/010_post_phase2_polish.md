@@ -4,7 +4,7 @@
 **Status**: ✅ Major Output and UX Polish Complete
 
 ## 🎯 Overview
-After the major achievements of Phase 2, we focused on polish, simplification, and output clarity. The goal was to make SAAE's error reporting not just powerful, but visually clear, easy to read, and 100% accurate in positioning.
+After the major achievements of Phase 2, we focused on polish, simplification, and output clarity. The goal was to make SwiftButler's error reporting not just powerful, but visually clear, easy to read, and 100% accurate in positioning.
 
 ## 🚀 Major Changes & Improvements
 
@@ -26,14 +26,14 @@ After the major achievements of Phase 2, we focused on polish, simplification, a
 ### 4. **Fix-It Suggestions in Output & Docs**
 - **Fix-its are now shown in both CLI output and README examples**
 - **Real-world fix-it suggestions** are included, not just placeholders
-- **Result**: Users see exactly what SAAE will suggest for real errors
+- **Result**: Users see exactly what SwiftButler will suggest for real errors
 
 ### 5. **Note Location References**
 - **Notes that reference other code positions** now show (line: X, column: Y) in the pointer line
 - **Result**: Cross-references are clear even when far apart in the file
 
 ### 6. **README & Docs Match Real Output**
-- **All error output examples in the README** are now generated from real SAAE runs, including fix-its and new formatting
+- **All error output examples in the README** are now generated from real SwiftButler runs, including fix-its and new formatting
 - **Result**: No more confusion between docs and actual tool output
 
 ### 7. **All Changes Committed & Pushed**
@@ -41,7 +41,7 @@ After the major achievements of Phase 2, we focused on polish, simplification, a
 
 ## 🛠️ Technical Highlights
 
-- `SAAECommand.swift` now generates tree-style Markdown output with precise column alignment and bold Unicode characters
+- `SwiftButlerCLI.swift` now generates tree-style Markdown output with precise column alignment and bold Unicode characters
 - Fix-it and note handling is unified and robust
 - Test suite covers all error sample files for both error content and position
 - README is now a reliable source of truth for output appearance
@@ -64,7 +64,7 @@ After the major achievements of Phase 2, we focused on polish, simplification, a
 
 ## 💭 Reflection
 
-This round of polish demonstrates the value of trusting robust libraries (SwiftSyntax) and focusing on user experience. By removing unnecessary heuristics and aligning documentation with real output, SAAE is now both simpler and more professional. The new tree-style output is not just pretty—it makes error context and fix suggestions much easier to understand at a glance.
+This round of polish demonstrates the value of trusting robust libraries (SwiftSyntax) and focusing on user experience. By removing unnecessary heuristics and aligning documentation with real output, SwiftButler is now both simpler and more professional. The new tree-style output is not just pretty—it makes error context and fix suggestions much easier to understand at a glance.
 
 ---
 *End of Entry #010* 

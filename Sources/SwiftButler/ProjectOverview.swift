@@ -41,8 +41,8 @@ public struct ProjectOverview {
 ///   - minVisibility: The minimum visibility level to include in the analysis.
 ///
 /// - Throws:
-///   - ``SAAEError/fileNotFound(_:)`` if any specified file doesn't exist.
-///   - ``SAAEError/fileReadError(_:_:)`` if any file cannot be read.
+///   - ``SwiftButlerError/fileNotFound(_:)`` if any specified file doesn't exist.
+///   - ``SwiftButlerError/fileReadError(_:_:)`` if any file cannot be read.
     public init(fileURLs: [URL], minVisibility: VisibilityLevel = .internal) throws {
         self.minVisibility = minVisibility
         var results: [FileOverview] = []

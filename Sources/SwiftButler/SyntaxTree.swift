@@ -45,7 +45,7 @@ public struct SyntaxTree {
 /// Creates a syntax tree by parsing a Swift source file from disk.
 ///
 /// - Parameter url: The URL of the Swift source file to parse
-/// - Throws: SAAEError if the file cannot be read or parsed
+/// - Throws: SwiftButlerError if the file cannot be read or parsed
     public init(url: URL) throws {
         do {
         let string = try String(contentsOf: url)
@@ -59,16 +59,16 @@ public struct SyntaxTree {
         return line.trimmingCharacters(in: .newlines)
     }
     } catch let error as CocoaError where error.code == .fileReadNoSuchFile {
-        throw SAAEError.fileNotFound(url)
+        throw SwiftButlerError.fileNotFound(url)
     } catch {
-        throw SAAEError.fileReadError(url, error)
+        throw SwiftButlerError.fileReadError(url, error)
     }
     }
 
 /// Creates a syntax tree by parsing Swift source code from a string.
 ///
 /// - Parameter string: The Swift source code to parse
-/// - Throws: SAAEError if code cannot be parsed
+/// - Throws: SwiftButlerError if code cannot be parsed
     public init(string: String) throws {
         self.sourceFile = Parser.parse(source: string)
         self.locationConverter = SourceLocationConverter(fileName: "source.swift", tree: self.sourceFile)

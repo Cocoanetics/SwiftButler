@@ -4,7 +4,7 @@ import Foundation
 ///
 /// This structure captures all relevant information about a Swift declaration including
 /// its metadata, documentation, signature, and hierarchical relationships. It serves
-/// as the fundamental building block for all SAAE analysis outputs.
+/// as the fundamental building block for all SwiftButler analysis outputs.
 ///
 /// ## Declaration Types
 ///

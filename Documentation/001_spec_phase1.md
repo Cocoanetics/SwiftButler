@@ -1,19 +1,19 @@
-Okay, here is a specification document for **Phase 1 of SAAE (Swift AST Abstractor & Editor)**, tailored for an AI Agent (or a developer acting on its behalf) to implement.
+Okay, here is a specification document for **Phase 1 of SwiftButler (Swift AST Abstractor & Editor)**, tailored for an AI Agent (or a developer acting on its behalf) to implement.
 
 ---
 
-**Project Name:** SAAE (Swift AST Abstractor & Editor) - Phase 1
+**Project Name:** SwiftButler (Swift AST Abstractor & Editor) - Phase 1
 
 **Version:** 1.0
 
 **Date:** October 26, 2023
 
-**Goal:** To create a foundational Swift library (SAAE) capable of parsing Swift source code and generating a structured, read-only "overview" of its declarations. This overview will include essential details like type, name, signature, visibility, sequence-based path, and parsed documentation. The output will be available in JSON, YAML, and Markdown formats, with options for visibility filtering. This phase focuses exclusively on providing information for analysis (e.g., by an LLM or human developer) and does not include any code modification capabilities.
+**Goal:** To create a foundational Swift library (SwiftButler) capable of parsing Swift source code and generating a structured, read-only "overview" of its declarations. This overview will include essential details like type, name, signature, visibility, sequence-based path, and parsed documentation. The output will be available in JSON, YAML, and Markdown formats, with options for visibility filtering. This phase focuses exclusively on providing information for analysis (e.g., by an LLM or human developer) and does not include any code modification capabilities.
 
 **1. Core Requirements & Functionality:**
 
 1.1. **Swift Code Parsing:**
-    *   SAAE must be able to parse Swift source code into an Abstract Syntax Tree (AST).
+    *   SwiftButler must be able to parse Swift source code into an Abstract Syntax Tree (AST).
     *   It shall utilize Apple's `swift-syntax` library for all parsing activities.
     *   **Required Functions:**
         *   `func parse(from_url fileURL: URL) throws -> AST_Handle`
@@ -27,12 +27,12 @@ Okay, here is a specification document for **Phase 1 of SAAE (Swift AST Abstract
             *   **Output:** An opaque `AST_Handle`.
             *   **Error Handling:** Throws an error if `swift-syntax` reports fatal parsing errors.
     *   **`AST_Handle` Definition:**
-        *   An opaque type (e.g., a struct wrapping a `SourceFileSyntax` object, or a unique identifier like a UUID that SAAE uses to look up the stored `SourceFileSyntax` object). It represents a successfully parsed, immutable AST state.
+        *   An opaque type (e.g., a struct wrapping a `SourceFileSyntax` object, or a unique identifier like a UUID that SwiftButler uses to look up the stored `SourceFileSyntax` object). It represents a successfully parsed, immutable AST state.
 
 1.2. **Overview Generation:**
-    *   SAAE must provide a function to generate a structured overview of the declarations within a parsed AST.
+    *   SwiftButler must provide a function to generate a structured overview of the declarations within a parsed AST.
     *   **Required Function:**
-        *   `func generate_overview(ast_handle: AST_Handle, format: OutputFormat = .json, min_visibility: SAAE.VisibilityLevel = .internal) throws -> String`
+        *   `func generate_overview(ast_handle: AST_Handle, format: OutputFormat = .json, min_visibility: SwiftButler.VisibilityLevel = .internal) throws -> String`
             *   **Input:**
                 *   `ast_handle`: The `AST_Handle` obtained from a successful parse operation.
                 *   `format`: An `OutputFormat` enum (`.json`, `.yaml`, `.markdown`). Default: `.json`.
@@ -46,7 +46,7 @@ Okay, here is a specification document for **Phase 1 of SAAE (Swift AST Abstract
 
 1.4. **`VisibilityLevel` Enum:**
     *   To be used for filtering and reporting declaration visibility.
-    *   `enum SAAE.VisibilityLevel: Int, CaseIterable, Comparable { ... }` (as defined previously, including `open`, `public`, `package`, `internal`, `fileprivate`, `private`, with appropriate raw values for comparison). The SAAE must correctly derive the visibility of a declaration from the `swift-syntax` AST (checking for explicit keywords or applying the default `internal`).
+    *   `enum SwiftButler.VisibilityLevel: Int, CaseIterable, Comparable { ... }` (as defined previously, including `open`, `public`, `package`, `internal`, `fileprivate`, `private`, with appropriate raw values for comparison). The SwiftButler must correctly derive the visibility of a declaration from the `swift-syntax` AST (checking for explicit keywords or applying the default `internal`).
 
 **2. Overview Content Details:**
 
@@ -88,7 +88,7 @@ Okay, here is a specification document for **Phase 1 of SAAE (Swift AST Abstract
 **3. Documentation Parsing Integration:**
 
 3.1. **Provided `Documentation` Struct:**
-    *   The SAAE implementation will be provided with an existing Swift struct:
+    *   The SwiftButler implementation will be provided with an existing Swift struct:
         ```swift
         struct Documentation {
             let description: String
@@ -98,7 +98,7 @@ Okay, here is a specification document for **Phase 1 of SAAE (Swift AST Abstract
         }
         ```
 3.2. **Extraction Logic:**
-    *   When processing a `swift-syntax` node, SAAE must access its `leadingTrivia`.
+    *   When processing a `swift-syntax` node, SwiftButler must access its `leadingTrivia`.
     *   It must iterate through the `TriviaPiece`s in `leadingTrivia`.
     *   It will concatenate the textual content of *only* `docLineComment` (`///`) and `docBlockComment` (`/** */`) pieces into a single string.
     *   This concatenated string will be passed to `Documentation(from: collectedDocText)` to obtain a structured `Documentation` object.
@@ -128,7 +128,7 @@ Okay, here is a specification document for **Phase 1 of SAAE (Swift AST Abstract
 
 **6. Deliverables:**
 
-6.1. A Swift library (SAAE module) implementing the functions and types specified.
+6.1. A Swift library (SwiftButler module) implementing the functions and types specified.
 6.2. Unit tests covering:
     *   Parsing of valid Swift code (from string and URL).
     *   Correct error handling for invalid input/parse failures.
@@ -149,4 +149,4 @@ Okay, here is a specification document for **Phase 1 of SAAE (Swift AST Abstract
 
 ---
 
-This specification should provide a clear roadmap for the AI Agent (or developer) tasked with implementing Phase 1 of SAAE. It defines the inputs, outputs, core logic, and constraints.
+This specification should provide a clear roadmap for the AI Agent (or developer) tasked with implementing Phase 1 of SwiftButler. It defines the inputs, outputs, core logic, and constraints.

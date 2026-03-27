@@ -1,25 +1,25 @@
 import Foundation
 
-/// Represents errors that can occur during SAAE operations.
+/// Represents errors that can occur during SwiftButler operations.
 ///
 /// This error type provides detailed information about failures that can happen
 /// while processing Swift source files, including file system errors and parsing issues.
 ///
 /// ## Error Cases
 ///
-/// - ``SAAEError/fileNotFound(_:)`` - When a specified file cannot be located
-/// - ``SAAEError/fileReadError(_:_:)`` - When a file exists but cannot be read due to permissions or other I/O issues
+/// - ``SwiftButlerError/fileNotFound(_:)`` - When a specified file cannot be located
+/// - ``SwiftButlerError/fileReadError(_:_:)`` - When a file exists but cannot be read due to permissions or other I/O issues
 ///
 /// ## Usage
 ///
 /// ```swift
 /// do {
-///     let result = try saae.generateOverview(url: fileURL)
-/// } catch let error as SAAEError {
-///     print("SAAE Error: \(error.localizedDescription)")
+///     let result = try overview.json()
+/// } catch let error as SwiftButlerError {
+///     print("SwiftButler error: \(error.localizedDescription)")
 /// }
 /// ```
-public enum SAAEError: Error {
+public enum SwiftButlerError: Error {
 /// Indicates that the specified file could not be found at the given URL.
 ///
 /// - Parameter URL: The file URL that could not be located.

@@ -17,7 +17,7 @@ let package = Package(
 			targets: ["SwiftButler"]),
 		.executable(
 			name: "butler",
-			targets: ["SAAEDemo"]),
+			targets: ["SwiftButlerCLI"]),
 	],
 	dependencies: [
 		.package(url: "https://github.com/swiftlang/swift-syntax.git", from: "600.0.0"),
@@ -34,19 +34,19 @@ let package = Package(
 				.product(name: "SwiftParserDiagnostics", package: "swift-syntax"),
 				"Yams"
 			],
-			path: "Sources/SAAE"),
+			path: "Sources/SwiftButler"),
 		.executableTarget(
-			name: "SAAEDemo",
+			name: "SwiftButlerCLI",
 			dependencies: [
 				"SwiftButler",
 				.product(name: "ArgumentParser", package: "swift-argument-parser")
 			]),
 		.testTarget(
-			name: "SAAETests",
+			name: "SwiftButlerTests",
 			dependencies: [
 				"SwiftButler"
 			],
-			path: "Tests/SAAETests",
+			path: "Tests/SwiftButlerTests",
 			resources: [
 				.copy("Resources")
 			])
