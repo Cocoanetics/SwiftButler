@@ -6,10 +6,11 @@
 
 SwiftButler uses SwiftSyntax to parse Swift code into syntax trees and turn large, noisy Swift codebases into smaller, more useful working surfaces for humans and coding agents.
 
-It is built around three practical jobs:
+It is built around four practical jobs:
 
 - `analyze`: produce a bare-bones "header" representation so an LLM can know the API without reading full implementations
 - `check`: run lightning-fast syntax checking with precise locations and fix-its
+- `reindent`: normalize Swift indentation with spaces or tabs so generated or patched code becomes consistent again
 - `distribute`: split large generated files into one file per declaration, including separate protocol conformance extensions, so agents have less code to scan
 
 Detailed CLI usage lives in [CLI.md](/Users/oliver/Developer/SAAE/CLI.md).
@@ -155,6 +156,31 @@ Why it helps:
 - fast feedback without waiting for a full semantic build
 - precise line and column locations
 - fix-it suggestions that are useful in automated repair loops
+
+### `reindent`
+
+Use `reindent` when generated, patched, or hand-edited Swift has inconsistent indentation.
+
+Typical uses:
+
+- normalizing indentation after LLM-generated edits
+- switching a file or project between spaces and tabs
+- cleaning up mixed indentation before committing or reviewing
+
+Examples:
+
+```bash
+swift run butler reindent MyFile.swift
+swift run butler reindent Sources/ --recursive --spaces 2
+swift run butler reindent Sources/ --recursive --tabs
+swift run butler reindent Sources/ --recursive --dry-run
+```
+
+Why it helps:
+
+- keeps formatting consistent without a full formatter pass
+- makes generated diffs easier to review
+- supports explicit spaces-vs-tabs preferences
 
 ### `distribute`
 
