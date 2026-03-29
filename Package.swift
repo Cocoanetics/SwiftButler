@@ -4,58 +4,58 @@
 import PackageDescription
 
 let package = Package(
-    name: "SwiftButler",
-    platforms: [
-        .macOS(.v10_15),
-        .iOS(.v13),
-        .tvOS(.v13),
-        .watchOS(.v6)
-    ],
-    products: [
-        .library(
-            name: "SwiftButler",
-            targets: ["SwiftButler"]),
-        .executable(
-            name: "butler",
-            targets: ["SwiftButlerCLI"]),
-    ],
-    dependencies: [
-        .package(url: "https://github.com/swiftlang/swift-syntax.git", from: "600.0.0"),
-        .package(url: "https://github.com/jpsim/Yams.git", from: "5.0.0"),
-        .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.2.0")
-    ],
-    targets: [
-        .plugin(
-            name: "SwiftButlerVersionGeneratorPlugin",
-            capability: .buildTool()
-        ),
-        .target(
-            name: "SwiftButler",
-            dependencies: [
-                .product(name: "SwiftSyntax", package: "swift-syntax"),
-                .product(name: "SwiftParser", package: "swift-syntax"),
-                .product(name: "SwiftDiagnostics", package: "swift-syntax"),
-                .product(name: "SwiftParserDiagnostics", package: "swift-syntax"),
-                "Yams"
-            ],
-            path: "Sources/SwiftButler",
-            plugins: [
-                .plugin(name: "SwiftButlerVersionGeneratorPlugin")
-            ]),
-        .executableTarget(
-            name: "SwiftButlerCLI",
-            dependencies: [
-                "SwiftButler",
-                .product(name: "ArgumentParser", package: "swift-argument-parser")
-            ]),
-        .testTarget(
-            name: "SwiftButlerTests",
-            dependencies: [
-                "SwiftButler"
-            ],
-            path: "Tests/SwiftButlerTests",
-            resources: [
-                .copy("Resources")
-            ])
-    ]
+	name: "SwiftButler",
+	platforms: [
+		.macOS(.v10_15),
+		.iOS(.v13),
+		.tvOS(.v13),
+		.watchOS(.v6)
+	],
+	products: [
+		.library(
+			name: "SwiftButler",
+			targets: ["SwiftButler"]),
+		.executable(
+			name: "butler",
+			targets: ["SwiftButlerCLI"]),
+	],
+	dependencies: [
+		.package(url: "https://github.com/swiftlang/swift-syntax.git", from: "600.0.0"),
+		.package(url: "https://github.com/jpsim/Yams.git", from: "5.0.0"),
+		.package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.2.0")
+	],
+	targets: [
+		.plugin(
+			name: "SwiftButlerVersionGeneratorPlugin",
+			capability: .buildTool()
+		),
+		.target(
+			name: "SwiftButler",
+			dependencies: [
+				.product(name: "SwiftSyntax", package: "swift-syntax"),
+				.product(name: "SwiftParser", package: "swift-syntax"),
+				.product(name: "SwiftDiagnostics", package: "swift-syntax"),
+				.product(name: "SwiftParserDiagnostics", package: "swift-syntax"),
+				"Yams"
+			],
+			path: "Sources/SwiftButler",
+			plugins: [
+				.plugin(name: "SwiftButlerVersionGeneratorPlugin")
+			]),
+		.executableTarget(
+			name: "SwiftButlerCLI",
+			dependencies: [
+				"SwiftButler",
+				.product(name: "ArgumentParser", package: "swift-argument-parser")
+			]),
+		.testTarget(
+			name: "SwiftButlerTests",
+			dependencies: [
+				"SwiftButler"
+			],
+			path: "Tests/SwiftButlerTests",
+			resources: [
+				.copy("Resources")
+			])
+	]
 )
