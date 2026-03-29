@@ -25,6 +25,10 @@ let package = Package(
 		.package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.2.0")
 	],
 	targets: [
+		.plugin(
+			name: "SwiftButlerVersionGeneratorPlugin",
+			capability: .buildTool()
+		),
 		.target(
 			name: "SwiftButler",
 			dependencies: [
@@ -34,7 +38,10 @@ let package = Package(
 				.product(name: "SwiftParserDiagnostics", package: "swift-syntax"),
 				"Yams"
 			],
-			path: "Sources/SwiftButler"),
+			path: "Sources/SwiftButler",
+			plugins: [
+				.plugin(name: "SwiftButlerVersionGeneratorPlugin")
+			]),
 		.executableTarget(
 			name: "SwiftButlerCLI",
 			dependencies: [
