@@ -50,6 +50,31 @@ struct IndentationTests {
         #expect(result.contains("  func compute"))
         #expect(result.contains("    return value"))
     }
+
+    @Test("Test basic indentation with tabs")
+    func testBasicIndentationTabs() throws {
+        let badlyIndentedCode = """
+        public struct TestStruct {
+        let values = [
+        1,
+        2
+        ]
+
+        func compute() {
+        return values.count
+        }
+        }
+        """
+
+        let tree = try SyntaxTree(string: badlyIndentedCode)
+        let reindented = try tree.reindent(using: .tabs)
+        let result = reindented.serializeToCode()
+
+        #expect(result.contains("\tlet values = ["))
+        #expect(result.contains("\t\t1,"))
+        #expect(result.contains("\tfunc compute()"))
+        #expect(result.contains("\t\treturn values.count"))
+    }
     
     @Test("Test switch statement indentation")
     func testSwitchStatementIndentation() throws {
@@ -286,4 +311,73 @@ struct IndentationTests {
         let dictLine1 = String(collectionLines[dictIndex + 1])
         #expect(dictLine1.trimmingCharacters(in: .whitespaces).hasPrefix("\"a\":"))
     }
-} 
+
+    @Test("Package manifest uses block indentation for multiline lists")
+    func testPackageManifestIndentation() throws {
+        let code = """
+        // swift-tools-version: 6.0
+        // The swift-tools-version declares the minimum version of Swift required to build this package.
+
+        import PackageDescription
+
+        let package = Package(
+                           name: "SwiftButler",
+                           platforms: [
+                                      .macOS(.v10_15),
+                                      .iOS(.v13),
+                                      .tvOS(.v13),
+                                      .watchOS(.v6)
+        \t],
+                           products: [
+                                     .library(
+                                              name: "SwiftButler",
+                                              targets: ["SwiftButler"]),
+                                     .executable(
+                                                 name: "butler",
+                                                 targets: ["SwiftButlerCLI"]),
+        \t],
+                           dependencies: [
+                                         .package(url: "https://github.com/swiftlang/swift-syntax.git", from: "600.0.0"),
+                                         .package(url: "https://github.com/jpsim/Yams.git", from: "5.0.0"),
+                                         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.2.0")
+        \t]
+        )
+        """
+
+        let expected = """
+        // swift-tools-version: 6.0
+        // The swift-tools-version declares the minimum version of Swift required to build this package.
+
+        import PackageDescription
+
+        let package = Package(
+            name: "SwiftButler",
+            platforms: [
+                .macOS(.v10_15),
+                .iOS(.v13),
+                .tvOS(.v13),
+                .watchOS(.v6)
+            ],
+            products: [
+                .library(
+                    name: "SwiftButler",
+                    targets: ["SwiftButler"]),
+                .executable(
+                    name: "butler",
+                    targets: ["SwiftButlerCLI"]),
+            ],
+            dependencies: [
+                .package(url: "https://github.com/swiftlang/swift-syntax.git", from: "600.0.0"),
+                .package(url: "https://github.com/jpsim/Yams.git", from: "5.0.0"),
+                .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.2.0")
+            ]
+        )
+        """
+
+        let tree = try SyntaxTree(string: code)
+        let reindented = try tree.reindent(indentSize: 4)
+        let result = reindented.serializeToCode()
+
+        #expect(result == expected)
+    }
+}

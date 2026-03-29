@@ -63,12 +63,14 @@ Reindent Swift files in place.
 ```bash
 swift run butler reindent MyFile.swift
 swift run butler reindent Sources/ --recursive
-swift run butler reindent Sources/ --recursive --indent-size 2
+swift run butler reindent Sources/ --recursive --spaces 2
+swift run butler reindent Sources/ --recursive --tabs
 swift run butler reindent Sources/ --recursive --dry-run
 ```
 
 Options:
 
 - `--recursive`
-- `--indent-size <n>`
+- `--spaces <n>` (defaults to `3` unless `--tabs` is used)
+- `--tabs`
 - `--dry-run`

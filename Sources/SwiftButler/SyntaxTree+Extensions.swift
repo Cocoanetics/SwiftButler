@@ -172,18 +172,18 @@ extension SyntaxTree {
 
 extension SyntaxTree {
 
-/// Reindents the entire syntax tree with consistent spacing.
+/// Reindents the entire syntax tree with consistent indentation.
 ///
 /// This method applies consistent indentation throughout the syntax tree,
-/// with configurable indent size and proper handling of nested scopes.
+/// with configurable indentation style and proper handling of nested scopes.
 ///
-/// - Parameter indentSize: Number of spaces per indentation level (default: 4)
+/// - Parameter indentationStyle: Indentation style to apply.
 /// - Returns: A new SyntaxTree with consistent indentation applied
 /// - Throws: SwiftButlerError if the reindented code cannot be parsed
 ///
 /// ## Features
 ///
-/// - **Configurable spacing**: Set any number of spaces per level
+/// - **Configurable indentation**: Use spaces or tabs
 /// - **Nested scope handling**: Automatically indents based on nesting
 /// - **Switch/case support**: Case labels indented deeper than switch
 /// - **Preserves comments**: Maintains existing documentation and comments
@@ -192,15 +192,22 @@ extension SyntaxTree {
 ///
 /// ```swift
 /// let tree = try SyntaxTree(string: sourceCode)
-/// let reindentedTree = try tree.reindent(indentSize: 2) // 2 spaces per level
+/// let reindentedTree = try tree.reindent(using: .spaces(2))
 /// let cleanCode = reindentedTree.serializeToCode()
 /// ```
-    public func reindent(indentSize: Int = 4) throws -> SyntaxTree {
-        let rewriter = IndentationRewriter(indentSize: indentSize)
+    public func reindent(using indentationStyle: IndentationStyle = .spaces(4)) throws -> SyntaxTree {
+        let rewriter = IndentationRewriter(indentationStyle: indentationStyle)
         let reindentedSourceFile = rewriter.visit(sourceFile)
 
 // Serialize the reindented syntax tree back to code and re-parse
         let reindentedCode = reindentedSourceFile.description
         return try SyntaxTree(string: reindentedCode)
+    }
+
+/// Reindents the entire syntax tree using spaces.
+///
+/// - Parameter indentSize: Number of spaces per indentation level (default: 4)
+    public func reindent(indentSize: Int = 4) throws -> SyntaxTree {
+        try reindent(using: .spaces(indentSize))
     }
 }

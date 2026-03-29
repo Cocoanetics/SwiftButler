@@ -23,15 +23,23 @@ import SwiftSyntax
 /// let reindentedTree = rewriter.visit(syntaxTree)
 /// ```
 public class IndentationRewriter: SyntaxRewriter {
+    private struct ContinuationIndent {
+        let closingKind: TokenKind
+        let contentColumn: Int
+        let closingColumn: Int
+    }
 
 /// The number of spaces to use for each indentation level.
-    private let indentSize: Int
+    private let indentationStyle: IndentationStyle
 
-    /// Stack of indentation columns for bracket continuations
-    private var continuationColumns: [Int] = []
+    /// Stack of continuation indentation for multiline argument and collection lists
+    private var continuationIndents: [ContinuationIndent] = []
 
     /// Tracks the current column while rewriting
     private var currentColumn: Int = 0
+
+    /// Tracks the indentation column for the current line
+    private var currentLineIndentColumn: Int = 0
 
     /// Current indentation level (0-based).
     private var currentLevel: Int = 0
@@ -40,13 +48,13 @@ public class IndentationRewriter: SyntaxRewriter {
 ///
 /// - Parameter indentSize: Number of spaces per indentation level (default: 4)
     public init(indentSize: Int = 4) {
-        self.indentSize = indentSize
+        self.indentationStyle = .spaces(indentSize)
         super.init()
     }
 
-/// Generates the appropriate indentation string for the current level.
-    private func indentationString(level: Int) -> String {
-        return String(repeating: " ", count: level * indentSize)
+    public init(indentationStyle: IndentationStyle) {
+        self.indentationStyle = indentationStyle
+        super.init()
     }
 
     /// Applies indentation using an explicit column value (number of spaces)
@@ -74,39 +82,21 @@ public class IndentationRewriter: SyntaxRewriter {
         newTrivia.append(contentsOf: pendingNewlines)
 
         if hasNewline {
-            newTrivia.append(.spaces(column))
+            newTrivia.append(contentsOf: indentationStyle.triviaPieces(forColumns: column))
         }
 
         return token.with(\.leadingTrivia, Trivia(pieces: newTrivia))
     }
 
-    /// Determines if a token is any left bracket
-    private func isLeftBracket(_ kind: TokenKind) -> Bool {
+    /// Determines if a token starts a continuation-indented list
+    private func continuationClosingKind(for kind: TokenKind) -> TokenKind? {
         switch kind {
-            case .leftParen, .leftSquareBracket, .leftBrace:
-                return true
+            case .leftParen:
+                return .rightParen
+            case .leftSquare:
+                return .rightSquare
             default:
-                return false
-        }
-    }
-
-    /// Determines if a token is any right bracket
-    private func isRightBracket(_ kind: TokenKind) -> Bool {
-        switch kind {
-            case .rightParen, .rightSquareBracket, .rightBrace:
-                return true
-            default:
-                return false
-        }
-    }
-
-    /// Determines if a token is a closing bracket used for indentation purposes
-    private func isClosingBracket(_ kind: TokenKind) -> Bool {
-        switch kind {
-            case .rightParen, .rightSquareBracket, .rightBrace:
-                return true
-            default:
-                return false
+                return nil
         }
     }
 
@@ -133,7 +123,7 @@ public class IndentationRewriter: SyntaxRewriter {
                     pendingNewlines.removeAll()
                     // Indent the comment at current level if we had a newline before it
                     if hasNewline && level > 0 {
-                        newTrivia.append(.spaces(level * indentSize))
+                        newTrivia.append(contentsOf: indentationStyle.triviaPieces(forLevel: level))
                     }
                     newTrivia.append(piece)
                     // Don't add extra newlines - preserve original structure
@@ -151,7 +141,7 @@ public class IndentationRewriter: SyntaxRewriter {
         // ONLY add indentation if there's a newline that precedes this node
         // This prevents adding spaces between tokens on the same line (like "else if")
         if hasNewline && level > 0 {
-            newTrivia.append(.spaces(level * indentSize))
+            newTrivia.append(contentsOf: indentationStyle.triviaPieces(forLevel: level))
         }
 
         return node.with(\.leadingTrivia, Trivia(pieces: newTrivia))
@@ -407,7 +397,7 @@ public class IndentationRewriter: SyntaxRewriter {
                 case .spaces(let count):
                     if afterNewline { indentColumn += count }
                 case .tabs(let count):
-                    if afterNewline { indentColumn += count * indentSize }
+                    if afterNewline { indentColumn += count * indentationStyle.unitWidth }
                 default:
                     break
             }
@@ -415,22 +405,37 @@ public class IndentationRewriter: SyntaxRewriter {
 
         var modifiedToken = token
 
-        if hasNewlineBefore, let column = continuationColumns.last, !isClosingBracket(token.tokenKind) {
-            modifiedToken = applyIndentation(token, column: column)
-            indentColumn = column
+        if hasNewlineBefore, let continuation = continuationIndents.last {
+            if token.tokenKind == continuation.closingKind {
+                modifiedToken = applyIndentation(token, column: continuation.closingColumn)
+                indentColumn = continuation.closingColumn
+            } else if token.tokenKind != .rightBrace {
+                modifiedToken = applyIndentation(token, column: continuation.contentColumn)
+                indentColumn = continuation.contentColumn
+            }
         } else if token.tokenKind == .rightBrace && hasNewlineBefore {
             let braceLevel = max(0, currentLevel - 1)
             modifiedToken = applyIndentation(token, level: braceLevel)
-            indentColumn = braceLevel * indentSize
+            indentColumn = braceLevel * indentationStyle.unitWidth
         }
 
         let columnBeforeToken = hasNewlineBefore ? indentColumn : currentColumn
         let columnAfterToken = columnBeforeToken + modifiedToken.text.count
 
-        if isLeftBracket(modifiedToken.tokenKind) {
-            continuationColumns.append(columnAfterToken)
-        } else if isRightBracket(modifiedToken.tokenKind) {
-            if !continuationColumns.isEmpty { continuationColumns.removeLast() }
+        if hasNewlineBefore {
+            currentLineIndentColumn = columnBeforeToken
+        }
+
+        if let closingKind = continuationClosingKind(for: modifiedToken.tokenKind) {
+            continuationIndents.append(
+                ContinuationIndent(
+                    closingKind: closingKind,
+                    contentColumn: currentLineIndentColumn + indentationStyle.unitWidth,
+                    closingColumn: currentLineIndentColumn
+                )
+            )
+        } else if continuationIndents.last?.closingKind == modifiedToken.tokenKind {
+            continuationIndents.removeLast()
         }
 
         currentColumn = columnAfterToken
