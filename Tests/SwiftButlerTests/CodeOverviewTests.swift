@@ -267,6 +267,30 @@ struct Phase1_2_CodeOverviewTests {
 		#expect(overview.contains("public var property: String { get }"))
 		#expect(overview.contains("public func method(input: String) -> String"))
 		#expect(overview.contains("import Foundation"))
+		#expect(overview.contains("/// A test class for interface generation"))
+		#expect(overview.contains("/// A test method"))
+		#expect(overview.contains("/// - Parameters:"))
+		#expect(overview.contains("///   - input: The input value"))
+		#expect(overview.contains("/// - Returns: The output value"))
+		#expect(!overview.contains("/**"))
+	}
+
+	@Test func interfacePreservesSeparateTripleSlashDocumentationLines() throws {
+		let swiftCode = """
+        /// Butler - Swift source analysis and refactoring CLI
+        ///
+        /// This executable exposes SwiftButler's source analysis, syntax checking,
+        /// and refactoring tools behind a command-line interface.
+        struct SwiftButlerCLI {}
+        """
+
+		let overview = try generateOverview(string: swiftCode, format: .interface)
+
+		#expect(overview.contains("/// Butler - Swift source analysis and refactoring CLI"))
+		#expect(overview.contains("///\n"))
+		#expect(overview.contains("/// This executable exposes SwiftButler's source analysis, syntax checking,"))
+		#expect(overview.contains("/// and refactoring tools behind a command-line interface."))
+		#expect(!overview.contains("/**"))
 	}
 
 	@Test func modifiersSupport() throws {

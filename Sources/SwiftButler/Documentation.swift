@@ -155,3 +155,44 @@ public struct Documentation: Codable {
 		self.throwsInfo = throwsValue
 	}
 }
+
+extension Documentation {
+	/// Renders structured documentation back into line-based Swift doc comments.
+	internal func interfaceComment(indentedBy indent: String = "") -> String {
+		var lines: [String] = []
+
+		if !description.isEmpty {
+			for line in description.components(separatedBy: .newlines) {
+				let trimmedLine = line.trimmingCharacters(in: .whitespacesAndNewlines)
+				if trimmedLine.isEmpty {
+					lines.append("///")
+				} else {
+					lines.append("/// \(trimmedLine)")
+				}
+			}
+		}
+
+		let hasSupplementarySections = !parameters.isEmpty || returns != nil || throwsInfo != nil
+		if hasSupplementarySections && !lines.isEmpty {
+			lines.append("///")
+		}
+
+		if !parameters.isEmpty {
+			lines.append("/// - Parameters:")
+			for (paramName, paramDesc) in parameters.sorted(by: { $0.key < $1.key }) {
+				lines.append("///   - \(paramName): \(paramDesc)")
+			}
+		}
+
+		if let throwsInfo {
+			lines.append("/// - Throws: \(throwsInfo)")
+		}
+
+		if let returns {
+			lines.append("/// - Returns: \(returns)")
+		}
+
+		guard !lines.isEmpty else { return "" }
+		return lines.map { "\(indent)\($0)" }.joined(separator: "\n") + "\n"
+	}
+}
