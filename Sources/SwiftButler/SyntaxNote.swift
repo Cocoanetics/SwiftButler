@@ -8,12 +8,12 @@ import SwiftSyntax
  Additional contextual information about a syntax error.
  */
 public struct SyntaxNote {
-/// The note's message
-    public let message: String
+	/// The note's message
+	public let message: String
 
-/// Source location where this note applies
-    public let location: SourceLocation?
+	/// Source location where this note applies
+	public let location: SourceLocation?
 
-/// The source line for this note's location
-    public let sourceLineText: String?
+	/// The source line for this note's location
+	public let sourceLineText: String?
 }

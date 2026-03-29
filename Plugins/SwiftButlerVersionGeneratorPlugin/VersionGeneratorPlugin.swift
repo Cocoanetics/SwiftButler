@@ -3,16 +3,16 @@ import Foundation
 
 @main
 struct VersionGeneratorPlugin: BuildToolPlugin {
-    func createBuildCommands(context: PluginContext, target: Target) throws -> [Command] {
-        let outputPath = context.pluginWorkDirectoryURL.appending(path: "GeneratedVersion.swift")
+	func createBuildCommands(context: PluginContext, target: Target) throws -> [Command] {
+		let outputPath = context.pluginWorkDirectoryURL.appending(path: "GeneratedVersion.swift")
 
-        return [
-            .prebuildCommand(
-                displayName: "Generate version from git tag or .version file",
-                executable: .init(filePath: "/bin/sh"),
-                arguments: [
-                    "-c",
-                    """
+		return [
+			.prebuildCommand(
+				displayName: "Generate version from git tag or .version file",
+				executable: .init(filePath: "/bin/sh"),
+				arguments: [
+					"-c",
+					"""
                     if [ -f "\(context.package.directoryURL.path())/.version" ]; then
                         VERSION=$(cat "\(context.package.directoryURL.path())/.version")
                     else
@@ -22,9 +22,9 @@ struct VersionGeneratorPlugin: BuildToolPlugin {
                     echo '// Auto-generated from git tag or .version file — do not edit' > "\(outputPath.path())"
                     echo 'public let swiftButlerVersion = "'"$VERSION"'"' >> "\(outputPath.path())"
                     """
-                ],
-                outputFilesDirectory: context.pluginWorkDirectoryURL
-            )
-        ]
-    }
+				],
+				outputFilesDirectory: context.pluginWorkDirectoryURL
+			)
+		]
+	}
 }

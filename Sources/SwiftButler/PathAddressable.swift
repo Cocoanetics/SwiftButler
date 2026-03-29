@@ -5,5 +5,5 @@ import SwiftParserDiagnostics
 import SwiftSyntax
 
 internal protocol PathAddressable {
-    var path: String { get set }
+	var path: String { get set }
 }

@@ -23,428 +23,428 @@ import SwiftSyntax
 /// let reindentedTree = rewriter.visit(syntaxTree)
 /// ```
 public class IndentationRewriter: SyntaxRewriter {
-    private struct ContinuationIndent {
-        let closingKind: TokenKind
-        let contentColumn: Int
-        let closingColumn: Int
-    }
+	private struct ContinuationIndent {
+		let closingKind: TokenKind
+		let contentColumn: Int
+		let closingColumn: Int
+	}
 
-/// The number of spaces to use for each indentation level.
-    private let indentationStyle: IndentationStyle
+	/// The number of spaces to use for each indentation level.
+	private let indentationStyle: IndentationStyle
 
-    /// Stack of continuation indentation for multiline argument and collection lists
-    private var continuationIndents: [ContinuationIndent] = []
+	/// Stack of continuation indentation for multiline argument and collection lists
+	private var continuationIndents: [ContinuationIndent] = []
 
-    /// Tracks the current column while rewriting
-    private var currentColumn: Int = 0
+	/// Tracks the current column while rewriting
+	private var currentColumn: Int = 0
 
-    /// Tracks the indentation column for the current line
-    private var currentLineIndentColumn: Int = 0
+	/// Tracks the indentation column for the current line
+	private var currentLineIndentColumn: Int = 0
 
-    /// Current indentation level (0-based).
-    private var currentLevel: Int = 0
+	/// Current indentation level (0-based).
+	private var currentLevel: Int = 0
 
-/// Creates a new indentation rewriter with the specified indent size.
-///
-/// - Parameter indentSize: Number of spaces per indentation level (default: 4)
-    public init(indentSize: Int = 4) {
-        self.indentationStyle = .spaces(indentSize)
-        super.init()
-    }
+	/// Creates a new indentation rewriter with the specified indent size.
+	///
+	/// - Parameter indentSize: Number of spaces per indentation level (default: 4)
+	public init(indentSize: Int = 4) {
+		self.indentationStyle = .spaces(indentSize)
+		super.init()
+	}
 
-    public init(indentationStyle: IndentationStyle) {
-        self.indentationStyle = indentationStyle
-        super.init()
-    }
+	public init(indentationStyle: IndentationStyle) {
+		self.indentationStyle = indentationStyle
+		super.init()
+	}
 
-    /// Applies indentation using an explicit column value (number of spaces)
-    private func applyIndentation(_ token: TokenSyntax, column: Int) -> TokenSyntax {
-        let existingTrivia = token.leadingTrivia
-        var newTrivia: [TriviaPiece] = []
+	/// Applies indentation using an explicit column value (number of spaces)
+	private func applyIndentation(_ token: TokenSyntax, column: Int) -> TokenSyntax {
+		let existingTrivia = token.leadingTrivia
+		var newTrivia: [TriviaPiece] = []
 
-        var hasNewline = false
-        var pendingNewlines: [TriviaPiece] = []
+		var hasNewline = false
+		var pendingNewlines: [TriviaPiece] = []
 
-        for piece in existingTrivia {
-            switch piece {
-                case .newlines(_), .carriageReturns(_), .carriageReturnLineFeeds(_):
-                    pendingNewlines.append(piece)
-                    hasNewline = true
-                case .spaces(_), .tabs(_):
-                    continue
-                default:
-                    newTrivia.append(contentsOf: pendingNewlines)
-                    pendingNewlines.removeAll()
-                    newTrivia.append(piece)
-            }
-        }
+		for piece in existingTrivia {
+			switch piece {
+				case .newlines(_), .carriageReturns(_), .carriageReturnLineFeeds(_):
+					pendingNewlines.append(piece)
+					hasNewline = true
+				case .spaces(_), .tabs(_):
+					continue
+				default:
+					newTrivia.append(contentsOf: pendingNewlines)
+					pendingNewlines.removeAll()
+					newTrivia.append(piece)
+			}
+		}
 
-        newTrivia.append(contentsOf: pendingNewlines)
+		newTrivia.append(contentsOf: pendingNewlines)
 
-        if hasNewline {
-            newTrivia.append(contentsOf: indentationStyle.triviaPieces(forColumns: column))
-        }
+		if hasNewline {
+			newTrivia.append(contentsOf: indentationStyle.triviaPieces(forColumns: column))
+		}
 
-        return token.with(\.leadingTrivia, Trivia(pieces: newTrivia))
-    }
+		return token.with(\.leadingTrivia, Trivia(pieces: newTrivia))
+	}
 
-    /// Determines if a token starts a continuation-indented list
-    private func continuationClosingKind(for kind: TokenKind) -> TokenKind? {
-        switch kind {
-            case .leftParen:
-                return .rightParen
-            case .leftSquare:
-                return .rightSquare
-            default:
-                return nil
-        }
-    }
+	/// Determines if a token starts a continuation-indented list
+	private func continuationClosingKind(for kind: TokenKind) -> TokenKind? {
+		switch kind {
+			case .leftParen:
+				return .rightParen
+			case .leftSquare:
+				return .rightSquare
+			default:
+				return nil
+		}
+	}
 
-/// Applies proper indentation to a node by replacing its leading trivia.
-    private func applyIndentation<T: SyntaxProtocol>(_ node: T, level: Int) -> T {
-        let existingTrivia = node.leadingTrivia
-        var newTrivia: [TriviaPiece] = []
+	/// Applies proper indentation to a node by replacing its leading trivia.
+	private func applyIndentation<T: SyntaxProtocol>(_ node: T, level: Int) -> T {
+		let existingTrivia = node.leadingTrivia
+		var newTrivia: [TriviaPiece] = []
 
-        // Keep all non-whitespace trivia (comments, etc.) but track newlines
-        var hasNewline = false
-        var pendingNewlines: [TriviaPiece] = []
+		// Keep all non-whitespace trivia (comments, etc.) but track newlines
+		var hasNewline = false
+		var pendingNewlines: [TriviaPiece] = []
 
-        for piece in existingTrivia {
-            switch piece {
-                case .newlines(_), .carriageReturns(_), .carriageReturnLineFeeds(_):
-                    pendingNewlines.append(piece)
-                    hasNewline = true
-                case .spaces(_), .tabs(_):
-                    // Skip existing whitespace, we'll add our own
-                    continue
-                case .lineComment(_), .docLineComment(_):
-                    // Add pending newlines first
-                    newTrivia.append(contentsOf: pendingNewlines)
-                    pendingNewlines.removeAll()
-                    // Indent the comment at current level if we had a newline before it
-                    if hasNewline && level > 0 {
-                        newTrivia.append(contentsOf: indentationStyle.triviaPieces(forLevel: level))
-                    }
-                    newTrivia.append(piece)
-                    // Don't add extra newlines - preserve original structure
-                default:
-                    // Add any pending newlines before non-whitespace trivia
-                    newTrivia.append(contentsOf: pendingNewlines)
-                    pendingNewlines.removeAll()
-                    newTrivia.append(piece)
-            }
-        }
+		for piece in existingTrivia {
+			switch piece {
+				case .newlines(_), .carriageReturns(_), .carriageReturnLineFeeds(_):
+					pendingNewlines.append(piece)
+					hasNewline = true
+				case .spaces(_), .tabs(_):
+					// Skip existing whitespace, we'll add our own
+					continue
+				case .lineComment(_), .docLineComment(_):
+					// Add pending newlines first
+					newTrivia.append(contentsOf: pendingNewlines)
+					pendingNewlines.removeAll()
+					// Indent the comment at current level if we had a newline before it
+					if hasNewline && level > 0 {
+						newTrivia.append(contentsOf: indentationStyle.triviaPieces(forLevel: level))
+					}
+					newTrivia.append(piece)
+				// Don't add extra newlines - preserve original structure
+				default:
+					// Add any pending newlines before non-whitespace trivia
+					newTrivia.append(contentsOf: pendingNewlines)
+					pendingNewlines.removeAll()
+					newTrivia.append(piece)
+			}
+		}
 
-        // Add any remaining pending newlines
-        newTrivia.append(contentsOf: pendingNewlines)
+		// Add any remaining pending newlines
+		newTrivia.append(contentsOf: pendingNewlines)
 
-        // ONLY add indentation if there's a newline that precedes this node
-        // This prevents adding spaces between tokens on the same line (like "else if")
-        if hasNewline && level > 0 {
-            newTrivia.append(contentsOf: indentationStyle.triviaPieces(forLevel: level))
-        }
+		// ONLY add indentation if there's a newline that precedes this node
+		// This prevents adding spaces between tokens on the same line (like "else if")
+		if hasNewline && level > 0 {
+			newTrivia.append(contentsOf: indentationStyle.triviaPieces(forLevel: level))
+		}
 
-        return node.with(\.leadingTrivia, Trivia(pieces: newTrivia))
-    }
+		return node.with(\.leadingTrivia, Trivia(pieces: newTrivia))
+	}
 
-// MARK: - Container Types
+	// MARK: - Container Types
 
-    public override func visit(_ node: StructDeclSyntax) -> DeclSyntax {
-        let indentedNode = applyIndentation(node, level: currentLevel)
-        currentLevel += 1
-        let result = super.visit(indentedNode)
-        currentLevel -= 1
-        return result
-    }
+	public override func visit(_ node: StructDeclSyntax) -> DeclSyntax {
+		let indentedNode = applyIndentation(node, level: currentLevel)
+		currentLevel += 1
+		let result = super.visit(indentedNode)
+		currentLevel -= 1
+		return result
+	}
 
-    public override func visit(_ node: ClassDeclSyntax) -> DeclSyntax {
-        let indentedNode = applyIndentation(node, level: currentLevel)
-        currentLevel += 1
-        let result = super.visit(indentedNode)
-        currentLevel -= 1
-        return result
-    }
+	public override func visit(_ node: ClassDeclSyntax) -> DeclSyntax {
+		let indentedNode = applyIndentation(node, level: currentLevel)
+		currentLevel += 1
+		let result = super.visit(indentedNode)
+		currentLevel -= 1
+		return result
+	}
 
-    public override func visit(_ node: EnumDeclSyntax) -> DeclSyntax {
-        let indentedNode = applyIndentation(node, level: currentLevel)
-        currentLevel += 1
-        let result = super.visit(indentedNode)
-        currentLevel -= 1
-        return result
-    }
+	public override func visit(_ node: EnumDeclSyntax) -> DeclSyntax {
+		let indentedNode = applyIndentation(node, level: currentLevel)
+		currentLevel += 1
+		let result = super.visit(indentedNode)
+		currentLevel -= 1
+		return result
+	}
 
-    public override func visit(_ node: ProtocolDeclSyntax) -> DeclSyntax {
-        let indentedNode = applyIndentation(node, level: currentLevel)
-        currentLevel += 1
-        let result = super.visit(indentedNode)
-        currentLevel -= 1
-        return result
-    }
+	public override func visit(_ node: ProtocolDeclSyntax) -> DeclSyntax {
+		let indentedNode = applyIndentation(node, level: currentLevel)
+		currentLevel += 1
+		let result = super.visit(indentedNode)
+		currentLevel -= 1
+		return result
+	}
 
-    public override func visit(_ node: ActorDeclSyntax) -> DeclSyntax {
-        let indentedNode = applyIndentation(node, level: currentLevel)
-        currentLevel += 1
-        let result = super.visit(indentedNode)
-        currentLevel -= 1
-        return result
-    }
+	public override func visit(_ node: ActorDeclSyntax) -> DeclSyntax {
+		let indentedNode = applyIndentation(node, level: currentLevel)
+		currentLevel += 1
+		let result = super.visit(indentedNode)
+		currentLevel -= 1
+		return result
+	}
 
-    public override func visit(_ node: ExtensionDeclSyntax) -> DeclSyntax {
-        let indentedNode = applyIndentation(node, level: currentLevel)
-        currentLevel += 1
-        let result = super.visit(indentedNode)
-        currentLevel -= 1
-        return result
-    }
+	public override func visit(_ node: ExtensionDeclSyntax) -> DeclSyntax {
+		let indentedNode = applyIndentation(node, level: currentLevel)
+		currentLevel += 1
+		let result = super.visit(indentedNode)
+		currentLevel -= 1
+		return result
+	}
 
-// MARK: - Functions and Methods
+	// MARK: - Functions and Methods
 
-    public override func visit(_ node: FunctionDeclSyntax) -> DeclSyntax {
-        let indentedNode = applyIndentation(node, level: currentLevel)
-        currentLevel += 1
-        let result = super.visit(indentedNode)
-        currentLevel -= 1
-        return result
-    }
+	public override func visit(_ node: FunctionDeclSyntax) -> DeclSyntax {
+		let indentedNode = applyIndentation(node, level: currentLevel)
+		currentLevel += 1
+		let result = super.visit(indentedNode)
+		currentLevel -= 1
+		return result
+	}
 
-    public override func visit(_ node: InitializerDeclSyntax) -> DeclSyntax {
-        let indentedNode = applyIndentation(node, level: currentLevel)
-        currentLevel += 1
-        let result = super.visit(indentedNode)
-        currentLevel -= 1
-        return result
-    }
+	public override func visit(_ node: InitializerDeclSyntax) -> DeclSyntax {
+		let indentedNode = applyIndentation(node, level: currentLevel)
+		currentLevel += 1
+		let result = super.visit(indentedNode)
+		currentLevel -= 1
+		return result
+	}
 
-// MARK: - Properties and Variables
+	// MARK: - Properties and Variables
 
-    public override func visit(_ node: VariableDeclSyntax) -> DeclSyntax {
-        let indentedNode = applyIndentation(node, level: currentLevel)
-        return super.visit(indentedNode)
-    }
+	public override func visit(_ node: VariableDeclSyntax) -> DeclSyntax {
+		let indentedNode = applyIndentation(node, level: currentLevel)
+		return super.visit(indentedNode)
+	}
 
-// MARK: - Property Accessors
+	// MARK: - Property Accessors
 
-    public override func visit(_ node: AccessorBlockSyntax) -> AccessorBlockSyntax {
-        // Accessor blocks (getter/setter) increase indentation for their contents
-        currentLevel += 1
-        let result = super.visit(node)
-        currentLevel -= 1
-        return result
-    }
+	public override func visit(_ node: AccessorBlockSyntax) -> AccessorBlockSyntax {
+		// Accessor blocks (getter/setter) increase indentation for their contents
+		currentLevel += 1
+		let result = super.visit(node)
+		currentLevel -= 1
+		return result
+	}
 
-// MARK: - Control Flow
+	// MARK: - Control Flow
 
-    public override func visit(_ node: IfExprSyntax) -> ExprSyntax {
-        // Determine if this `if` is part of an `else if` chain. In SwiftSyntax,
-        // an `else if` is represented as an `IfExprSyntax` that is the `elseBody`
-        // of another `IfExprSyntax`. In that case, we *do not* want to increase
-        // the indentation level for the `else if` line itself – it should be
-        // aligned with the originating `if`.
+	public override func visit(_ node: IfExprSyntax) -> ExprSyntax {
+		// Determine if this `if` is part of an `else if` chain. In SwiftSyntax,
+		// an `else if` is represented as an `IfExprSyntax` that is the `elseBody`
+		// of another `IfExprSyntax`. In that case, we *do not* want to increase
+		// the indentation level for the `else if` line itself – it should be
+		// aligned with the originating `if`.
 
-        var nodeIndentLevel = currentLevel
-        var shouldIncreaseForChildren = true
+		var nodeIndentLevel = currentLevel
+		var shouldIncreaseForChildren = true
 
-        if let parentIf = node.parent?.as(IfExprSyntax.self),
+		if let parentIf = node.parent?.as(IfExprSyntax.self),
            let elseBodyIf = parentIf.elseBody?.as(IfExprSyntax.self),
            elseBodyIf.id == node.id {
-            // This node is an `else if` continuation.
-            nodeIndentLevel = max(0, currentLevel - 1) // Align with parent `if`
-            // Children are already one level deeper than `nodeIndentLevel`, so
-            // skip the additional increment.
-            shouldIncreaseForChildren = false
-        }
+			// This node is an `else if` continuation.
+			nodeIndentLevel = max(0, currentLevel - 1) // Align with parent `if`
+			// Children are already one level deeper than `nodeIndentLevel`, so
+			// skip the additional increment.
+			shouldIncreaseForChildren = false
+		}
 
-        let indentedNode = applyIndentation(node, level: nodeIndentLevel)
+		let indentedNode = applyIndentation(node, level: nodeIndentLevel)
 
-        if shouldIncreaseForChildren {
-            currentLevel += 1
-            let result = super.visit(indentedNode)
-            currentLevel -= 1
-            return result
-        } else {
-            // Children are already at the correct indentation level.
-            return super.visit(indentedNode)
-        }
-    }
+		if shouldIncreaseForChildren {
+			currentLevel += 1
+			let result = super.visit(indentedNode)
+			currentLevel -= 1
+			return result
+		} else {
+			// Children are already at the correct indentation level.
+			return super.visit(indentedNode)
+		}
+	}
 
-    public override func visit(_ node: ForStmtSyntax) -> StmtSyntax {
-        let indentedNode = applyIndentation(node, level: currentLevel)
-        currentLevel += 1
-        let result = super.visit(indentedNode)
-        currentLevel -= 1
-        return result
-    }
+	public override func visit(_ node: ForStmtSyntax) -> StmtSyntax {
+		let indentedNode = applyIndentation(node, level: currentLevel)
+		currentLevel += 1
+		let result = super.visit(indentedNode)
+		currentLevel -= 1
+		return result
+	}
 
-    public override func visit(_ node: WhileStmtSyntax) -> StmtSyntax {
-        let indentedNode = applyIndentation(node, level: currentLevel)
-        currentLevel += 1
-        let result = super.visit(indentedNode)
-        currentLevel -= 1
-        return result
-    }
+	public override func visit(_ node: WhileStmtSyntax) -> StmtSyntax {
+		let indentedNode = applyIndentation(node, level: currentLevel)
+		currentLevel += 1
+		let result = super.visit(indentedNode)
+		currentLevel -= 1
+		return result
+	}
 
-    public override func visit(_ node: RepeatStmtSyntax) -> StmtSyntax {
-        let indentedNode = applyIndentation(node, level: currentLevel)
-        currentLevel += 1
-        let result = super.visit(indentedNode)
-        currentLevel -= 1
-        return result
-    }
+	public override func visit(_ node: RepeatStmtSyntax) -> StmtSyntax {
+		let indentedNode = applyIndentation(node, level: currentLevel)
+		currentLevel += 1
+		let result = super.visit(indentedNode)
+		currentLevel -= 1
+		return result
+	}
 
-    public override func visit(_ node: ClosureExprSyntax) -> ExprSyntax {
-        let indentedNode = applyIndentation(node, level: currentLevel)
-        currentLevel += 1
-        let result = super.visit(indentedNode)
-        currentLevel -= 1
-        return result
-    }
+	public override func visit(_ node: ClosureExprSyntax) -> ExprSyntax {
+		let indentedNode = applyIndentation(node, level: currentLevel)
+		currentLevel += 1
+		let result = super.visit(indentedNode)
+		currentLevel -= 1
+		return result
+	}
 
-    public override func visit(_ node: DoStmtSyntax) -> StmtSyntax {
-        let indentedNode = applyIndentation(node, level: currentLevel)
-        currentLevel += 1
-        let result = super.visit(indentedNode)
-        currentLevel -= 1
-        return result
-    }
+	public override func visit(_ node: DoStmtSyntax) -> StmtSyntax {
+		let indentedNode = applyIndentation(node, level: currentLevel)
+		currentLevel += 1
+		let result = super.visit(indentedNode)
+		currentLevel -= 1
+		return result
+	}
 
-    public override func visit(_ node: GuardStmtSyntax) -> StmtSyntax {
-        let indentedNode = applyIndentation(node, level: currentLevel)
-        currentLevel += 1
-        let result = super.visit(indentedNode)
-        currentLevel -= 1
-        return result
-    }
+	public override func visit(_ node: GuardStmtSyntax) -> StmtSyntax {
+		let indentedNode = applyIndentation(node, level: currentLevel)
+		currentLevel += 1
+		let result = super.visit(indentedNode)
+		currentLevel -= 1
+		return result
+	}
 
-// MARK: - Switch Statements
+	// MARK: - Switch Statements
 
-    public override func visit(_ node: SwitchExprSyntax) -> ExprSyntax {
-        let indentedNode = applyIndentation(node, level: currentLevel)
-        currentLevel += 1
-        let result = super.visit(indentedNode)
-        currentLevel -= 1
-        return result
-    }
+	public override func visit(_ node: SwitchExprSyntax) -> ExprSyntax {
+		let indentedNode = applyIndentation(node, level: currentLevel)
+		currentLevel += 1
+		let result = super.visit(indentedNode)
+		currentLevel -= 1
+		return result
+	}
 
-    public override func visit(_ node: SwitchCaseSyntax) -> SwitchCaseSyntax {
-// Case labels get indented at current level (one level deeper than switch)
-        let indentedNode = applyIndentation(node, level: currentLevel)
-        currentLevel += 1 // Increase level for case body
-        let result = super.visit(indentedNode)
-        currentLevel -= 1
-        return result
-    }
+	public override func visit(_ node: SwitchCaseSyntax) -> SwitchCaseSyntax {
+		// Case labels get indented at current level (one level deeper than switch)
+		let indentedNode = applyIndentation(node, level: currentLevel)
+		currentLevel += 1 // Increase level for case body
+		let result = super.visit(indentedNode)
+		currentLevel -= 1
+		return result
+	}
 
-// MARK: - Enum Cases
+	// MARK: - Enum Cases
 
-    public override func visit(_ node: EnumCaseDeclSyntax) -> DeclSyntax {
-        let indentedNode = applyIndentation(node, level: currentLevel)
-        return super.visit(indentedNode)
-    }
+	public override func visit(_ node: EnumCaseDeclSyntax) -> DeclSyntax {
+		let indentedNode = applyIndentation(node, level: currentLevel)
+		return super.visit(indentedNode)
+	}
 
-// MARK: - Statements
+	// MARK: - Statements
 
-    public override func visit(_ node: ExpressionStmtSyntax) -> StmtSyntax {
-        let indentedNode = applyIndentation(node, level: currentLevel)
-        return super.visit(indentedNode)
-    }
+	public override func visit(_ node: ExpressionStmtSyntax) -> StmtSyntax {
+		let indentedNode = applyIndentation(node, level: currentLevel)
+		return super.visit(indentedNode)
+	}
 
-    public override func visit(_ node: ReturnStmtSyntax) -> StmtSyntax {
-        let indentedNode = applyIndentation(node, level: currentLevel)
-        return super.visit(indentedNode)
-    }
+	public override func visit(_ node: ReturnStmtSyntax) -> StmtSyntax {
+		let indentedNode = applyIndentation(node, level: currentLevel)
+		return super.visit(indentedNode)
+	}
 
-    public override func visit(_ node: ThrowStmtSyntax) -> StmtSyntax {
-        let indentedNode = applyIndentation(node, level: currentLevel)
-        return super.visit(indentedNode)
-    }
+	public override func visit(_ node: ThrowStmtSyntax) -> StmtSyntax {
+		let indentedNode = applyIndentation(node, level: currentLevel)
+		return super.visit(indentedNode)
+	}
 
-    public override func visit(_ node: BreakStmtSyntax) -> StmtSyntax {
-        let indentedNode = applyIndentation(node, level: currentLevel)
-        return super.visit(indentedNode)
-    }
+	public override func visit(_ node: BreakStmtSyntax) -> StmtSyntax {
+		let indentedNode = applyIndentation(node, level: currentLevel)
+		return super.visit(indentedNode)
+	}
 
-    public override func visit(_ node: ContinueStmtSyntax) -> StmtSyntax {
-        let indentedNode = applyIndentation(node, level: currentLevel)
-        return super.visit(indentedNode)
-    }
+	public override func visit(_ node: ContinueStmtSyntax) -> StmtSyntax {
+		let indentedNode = applyIndentation(node, level: currentLevel)
+		return super.visit(indentedNode)
+	}
 
-// MARK: - Type Members
+	// MARK: - Type Members
 
-    public override func visit(_ node: MemberBlockItemSyntax) -> MemberBlockItemSyntax {
-        let indentedNode = applyIndentation(node, level: currentLevel)
-        return super.visit(indentedNode)
-    }
+	public override func visit(_ node: MemberBlockItemSyntax) -> MemberBlockItemSyntax {
+		let indentedNode = applyIndentation(node, level: currentLevel)
+		return super.visit(indentedNode)
+	}
 
-    public override func visit(_ node: CodeBlockItemSyntax) -> CodeBlockItemSyntax {
-        let indentedNode = applyIndentation(node, level: currentLevel)
-        return super.visit(indentedNode)
-    }
+	public override func visit(_ node: CodeBlockItemSyntax) -> CodeBlockItemSyntax {
+		let indentedNode = applyIndentation(node, level: currentLevel)
+		return super.visit(indentedNode)
+	}
 
-// MARK: - Tokens (for all tokens that need indentation)
+	// MARK: - Tokens (for all tokens that need indentation)
 
-    public override func visit(_ token: TokenSyntax) -> TokenSyntax {
-        let leadingTrivia = token.leadingTrivia
-        var hasNewlineBefore = false
-        var indentColumn = currentColumn
-        var afterNewline = false
+	public override func visit(_ token: TokenSyntax) -> TokenSyntax {
+		let leadingTrivia = token.leadingTrivia
+		var hasNewlineBefore = false
+		var indentColumn = currentColumn
+		var afterNewline = false
 
-        for piece in leadingTrivia {
-            switch piece {
-                case .newlines(_), .carriageReturns(_), .carriageReturnLineFeeds(_):
-                    hasNewlineBefore = true
-                    afterNewline = true
-                    indentColumn = 0
-                case .spaces(let count):
-                    if afterNewline { indentColumn += count }
-                case .tabs(let count):
-                    if afterNewline { indentColumn += count * indentationStyle.unitWidth }
-                default:
-                    break
-            }
-        }
+		for piece in leadingTrivia {
+			switch piece {
+				case .newlines(_), .carriageReturns(_), .carriageReturnLineFeeds(_):
+					hasNewlineBefore = true
+					afterNewline = true
+					indentColumn = 0
+				case .spaces(let count):
+					if afterNewline { indentColumn += count }
+				case .tabs(let count):
+					if afterNewline { indentColumn += count * indentationStyle.unitWidth }
+				default:
+					break
+			}
+		}
 
-        var modifiedToken = token
+		var modifiedToken = token
 
-        if hasNewlineBefore, let continuation = continuationIndents.last {
-            if token.tokenKind == continuation.closingKind {
-                modifiedToken = applyIndentation(token, column: continuation.closingColumn)
-                indentColumn = continuation.closingColumn
-            } else if token.tokenKind != .rightBrace {
-                modifiedToken = applyIndentation(token, column: continuation.contentColumn)
-                indentColumn = continuation.contentColumn
-            }
-        } else if token.tokenKind == .rightBrace && hasNewlineBefore {
-            let braceLevel = max(0, currentLevel - 1)
-            modifiedToken = applyIndentation(token, level: braceLevel)
-            indentColumn = braceLevel * indentationStyle.unitWidth
-        }
+		if hasNewlineBefore, let continuation = continuationIndents.last {
+			if token.tokenKind == continuation.closingKind {
+				modifiedToken = applyIndentation(token, column: continuation.closingColumn)
+				indentColumn = continuation.closingColumn
+			} else if token.tokenKind != .rightBrace {
+				modifiedToken = applyIndentation(token, column: continuation.contentColumn)
+				indentColumn = continuation.contentColumn
+			}
+		} else if token.tokenKind == .rightBrace && hasNewlineBefore {
+			let braceLevel = max(0, currentLevel - 1)
+			modifiedToken = applyIndentation(token, level: braceLevel)
+			indentColumn = braceLevel * indentationStyle.unitWidth
+		}
 
-        let columnBeforeToken = hasNewlineBefore ? indentColumn : currentColumn
-        let columnAfterToken = columnBeforeToken + modifiedToken.text.count
+		let columnBeforeToken = hasNewlineBefore ? indentColumn : currentColumn
+		let columnAfterToken = columnBeforeToken + modifiedToken.text.count
 
-        if hasNewlineBefore {
-            currentLineIndentColumn = columnBeforeToken
-        }
+		if hasNewlineBefore {
+			currentLineIndentColumn = columnBeforeToken
+		}
 
-        if let closingKind = continuationClosingKind(for: modifiedToken.tokenKind) {
-            continuationIndents.append(
-                ContinuationIndent(
-                    closingKind: closingKind,
-                    contentColumn: currentLineIndentColumn + indentationStyle.unitWidth,
-                    closingColumn: currentLineIndentColumn
-                )
-            )
-        } else if continuationIndents.last?.closingKind == modifiedToken.tokenKind {
-            continuationIndents.removeLast()
-        }
+		if let closingKind = continuationClosingKind(for: modifiedToken.tokenKind) {
+			continuationIndents.append(
+				ContinuationIndent(
+					closingKind: closingKind,
+					contentColumn: currentLineIndentColumn + indentationStyle.unitWidth,
+					closingColumn: currentLineIndentColumn
+				)
+			)
+		} else if continuationIndents.last?.closingKind == modifiedToken.tokenKind {
+			continuationIndents.removeLast()
+		}
 
-        currentColumn = columnAfterToken
+		currentColumn = columnAfterToken
 
-        return super.visit(modifiedToken)
-    }
+		return super.visit(modifiedToken)
+	}
 
-    public override func visit(_ node: TryExprSyntax) -> ExprSyntax {
-        let indentedNode = applyIndentation(node, level: currentLevel)
-        return super.visit(indentedNode)
-    }
+	public override func visit(_ node: TryExprSyntax) -> ExprSyntax {
+		let indentedNode = applyIndentation(node, level: currentLevel)
+		return super.visit(indentedNode)
+	}
 } 

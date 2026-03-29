@@ -4,10 +4,10 @@ import Foundation
 
 @Suite("Indentation Tests")
 struct IndentationTests {
-    
-    @Test("Test basic indentation with 4 spaces")
+
+	@Test("Test basic indentation with 4 spaces")
     func testBasicIndentationFourSpaces() throws {
-        let badlyIndentedCode = """
+		let badlyIndentedCode = """
         import Foundation
         
         public class TestClass {
@@ -18,20 +18,20 @@ struct IndentationTests {
         }
         }
         """
-        
-        let tree = try SyntaxTree(string: badlyIndentedCode)
-        let reindented = try tree.reindent(indentSize: 4)
-        let result = reindented.serializeToCode()
-        
-        // Check that properties and methods are indented with 4 spaces
-        #expect(result.contains("    public var property"))
-        #expect(result.contains("    public func method"))
-        #expect(result.contains("        print(\"Hello\")"))
-    }
-    
-    @Test("Test basic indentation with 2 spaces")
+
+		let tree = try SyntaxTree(string: badlyIndentedCode)
+		let reindented = try tree.reindent(indentSize: 4)
+		let result = reindented.serializeToCode()
+
+		// Check that properties and methods are indented with 4 spaces
+		#expect(result.contains("    public var property"))
+		#expect(result.contains("    public func method"))
+		#expect(result.contains("        print(\"Hello\")"))
+	}
+
+	@Test("Test basic indentation with 2 spaces")
     func testBasicIndentationTwoSpaces() throws {
-        let badlyIndentedCode = """
+		let badlyIndentedCode = """
         public struct TestStruct {
         let value: Int
         
@@ -40,20 +40,20 @@ struct IndentationTests {
         }
         }
         """
-        
-        let tree = try SyntaxTree(string: badlyIndentedCode)
-        let reindented = try tree.reindent(indentSize: 2)
-        let result = reindented.serializeToCode()
-        
-        // Check that properties and methods are indented with 2 spaces
-        #expect(result.contains("  let value"))
-        #expect(result.contains("  func compute"))
-        #expect(result.contains("    return value"))
-    }
 
-    @Test("Test basic indentation with tabs")
+		let tree = try SyntaxTree(string: badlyIndentedCode)
+		let reindented = try tree.reindent(indentSize: 2)
+		let result = reindented.serializeToCode()
+
+		// Check that properties and methods are indented with 2 spaces
+		#expect(result.contains("  let value"))
+		#expect(result.contains("  func compute"))
+		#expect(result.contains("    return value"))
+	}
+
+	@Test("Test basic indentation with tabs")
     func testBasicIndentationTabs() throws {
-        let badlyIndentedCode = """
+		let badlyIndentedCode = """
         public struct TestStruct {
         let values = [
         1,
@@ -66,19 +66,19 @@ struct IndentationTests {
         }
         """
 
-        let tree = try SyntaxTree(string: badlyIndentedCode)
-        let reindented = try tree.reindent(using: .tabs)
-        let result = reindented.serializeToCode()
+		let tree = try SyntaxTree(string: badlyIndentedCode)
+		let reindented = try tree.reindent(using: .tabs)
+		let result = reindented.serializeToCode()
 
-        #expect(result.contains("\tlet values = ["))
-        #expect(result.contains("\t\t1,"))
-        #expect(result.contains("\tfunc compute()"))
-        #expect(result.contains("\t\treturn values.count"))
-    }
-    
-    @Test("Test switch statement indentation")
+		#expect(result.contains("\tlet values = ["))
+		#expect(result.contains("\t\t1,"))
+		#expect(result.contains("\tfunc compute()"))
+		#expect(result.contains("\t\treturn values.count"))
+	}
+
+	@Test("Test switch statement indentation")
     func testSwitchStatementIndentation() throws {
-        let badlyIndentedCode = """
+		let badlyIndentedCode = """
         public func process(_ value: String) {
         switch value {
         case "a":
@@ -90,21 +90,21 @@ struct IndentationTests {
         }
         }
         """
-        
-        let tree = try SyntaxTree(string: badlyIndentedCode)
-        let reindented = try tree.reindent(indentSize: 4)
-        let result = reindented.serializeToCode()
-        
-        // Check switch case indentation
-        #expect(result.contains("    switch value"))
-        #expect(result.contains("        case \"a\":"))
-        #expect(result.contains("            print(\"Found a\")"))
-        #expect(result.contains("    }"))  // Closing brace aligned with switch
-    }
-    
-    @Test("Test nested structures")
+
+		let tree = try SyntaxTree(string: badlyIndentedCode)
+		let reindented = try tree.reindent(indentSize: 4)
+		let result = reindented.serializeToCode()
+
+		// Check switch case indentation
+		#expect(result.contains("    switch value"))
+		#expect(result.contains("        case \"a\":"))
+		#expect(result.contains("            print(\"Found a\")"))
+		#expect(result.contains("    }"))  // Closing brace aligned with switch
+	}
+
+	@Test("Test nested structures")
     func testNestedStructures() throws {
-        let badlyIndentedCode = """
+		let badlyIndentedCode = """
         public struct Outer {
         public struct Inner {
         let value: Int
@@ -119,22 +119,22 @@ struct IndentationTests {
         }
         }
         """
-        
-        let tree = try SyntaxTree(string: badlyIndentedCode)
-        let reindented = try tree.reindent(indentSize: 4)
-        let result = reindented.serializeToCode()
-        
-        // Check nested indentation
-        #expect(result.contains("    public struct Inner"))
-        #expect(result.contains("        let value"))
-        #expect(result.contains("        func process"))
-        #expect(result.contains("            if value > 0"))
-        #expect(result.contains("            } else {"))
-    }
-    
-    @Test("Test enum with cases")
+
+		let tree = try SyntaxTree(string: badlyIndentedCode)
+		let reindented = try tree.reindent(indentSize: 4)
+		let result = reindented.serializeToCode()
+
+		// Check nested indentation
+		#expect(result.contains("    public struct Inner"))
+		#expect(result.contains("        let value"))
+		#expect(result.contains("        func process"))
+		#expect(result.contains("            if value > 0"))
+		#expect(result.contains("            } else {"))
+	}
+
+	@Test("Test enum with cases")
     func testEnumWithCases() throws {
-        let badlyIndentedCode = """
+		let badlyIndentedCode = """
         public enum Status {
         case pending
         case active(String)
@@ -152,21 +152,21 @@ struct IndentationTests {
         }
         }
         """
-        
-        let tree = try SyntaxTree(string: badlyIndentedCode)
-        let reindented = try tree.reindent(indentSize: 4)
-        let result = reindented.serializeToCode()
-        
-        // Check enum case indentation
-        #expect(result.contains("    case pending"))
-        #expect(result.contains("    case active(String)"))
-        #expect(result.contains("    func description"))
-        #expect(result.contains("        switch self"))
-    }
-    
-    @Test("Test multiline string literals")
+
+		let tree = try SyntaxTree(string: badlyIndentedCode)
+		let reindented = try tree.reindent(indentSize: 4)
+		let result = reindented.serializeToCode()
+
+		// Check enum case indentation
+		#expect(result.contains("    case pending"))
+		#expect(result.contains("    case active(String)"))
+		#expect(result.contains("    func description"))
+		#expect(result.contains("        switch self"))
+	}
+
+	@Test("Test multiline string literals")
     func testMultilineStringLiterals() throws {
-        let badlyIndentedCode = """
+		let badlyIndentedCode = """
         public class Example {
         public func test() {
         let message = \"\"\"
@@ -184,33 +184,33 @@ struct IndentationTests {
         }
         }
         """
-        
-        let tree = try SyntaxTree(string: badlyIndentedCode)
-        let reindented = try tree.reindent(indentSize: 4)
-        let result = reindented.serializeToCode()
-        
-        // Check that the class and function are properly indented
-        #expect(result.contains("    public func test"))
-        #expect(result.contains("        let message"))
-        #expect(result.contains("        print(message)"))
-        
-        // Check that string literal content is preserved exactly as in the original
-        #expect(result.contains("    This is line 1"))           // Original: 4 spaces
-        #expect(result.contains("    This is line 2"))           // Original: 4 spaces
-        #expect(result.contains("        Indented line 3"))      // Original: 8 spaces
-        #expect(result.contains("No leading spaces"))            // Original: no spaces
-        #expect(result.contains("    Some spaces here"))         // Original: 4 spaces
-        
-        // The main requirement: surrounding code is indented, string content preserved
-        #expect(result.contains("public class Example {"))
-        #expect(result.contains("    public func test() {"))
-        #expect(result.contains("        let message = "))
-        #expect(result.contains("        let anotherString = "))
-    }
-    
-    @Test("Test else-if statements")
+
+		let tree = try SyntaxTree(string: badlyIndentedCode)
+		let reindented = try tree.reindent(indentSize: 4)
+		let result = reindented.serializeToCode()
+
+		// Check that the class and function are properly indented
+		#expect(result.contains("    public func test"))
+		#expect(result.contains("        let message"))
+		#expect(result.contains("        print(message)"))
+
+		// Check that string literal content is preserved exactly as in the original
+		#expect(result.contains("    This is line 1"))           // Original: 4 spaces
+		#expect(result.contains("    This is line 2"))           // Original: 4 spaces
+		#expect(result.contains("        Indented line 3"))      // Original: 8 spaces
+		#expect(result.contains("No leading spaces"))            // Original: no spaces
+		#expect(result.contains("    Some spaces here"))         // Original: 4 spaces
+
+		// The main requirement: surrounding code is indented, string content preserved
+		#expect(result.contains("public class Example {"))
+		#expect(result.contains("    public func test() {"))
+		#expect(result.contains("        let message = "))
+		#expect(result.contains("        let anotherString = "))
+	}
+
+	@Test("Test else-if statements")
     func testElseIfStatements() throws {
-        let badlyIndentedCode = """
+		let badlyIndentedCode = """
         public func processNumbers(_ numbers: [Int]) -> [Int] {
         var result: [Int] = []
         
@@ -232,36 +232,36 @@ struct IndentationTests {
         return result
         }
         """
-        
-        let tree = try SyntaxTree(string: badlyIndentedCode)
-        let reindented = try tree.reindent(indentSize: 4)
-        let result = reindented.serializeToCode()
-        
-        // Check that else-if is properly formatted without extra spaces
-        #expect(result.contains("        } else if number < 0 {"))
-        #expect(!result.contains("} else             if number < 0 {"))
-        
-        // Check proper indentation levels
-        #expect(result.contains("    var result: [Int] = []"))
-        #expect(result.contains("    for number in numbers {"))
-        #expect(result.contains("        if number > 0 {"))
-        #expect(result.contains("            result.append(number * 2)"))
-        #expect(result.contains("        } else if number < 0 {"))
-        #expect(result.contains("            result.append(abs(number))"))
-        #expect(result.contains("        } else {"))
-        #expect(result.contains("            result.append(1)"))
-        
-        // Check repeat statement indentation
-        #expect(result.contains("    repeat {"))
-        #expect(result.contains("        result.append(0)"))
-        #expect(result.contains("    } while result.count < 10"))
-        
-        #expect(result.contains("    return result"))
-    }
 
-    @Test("Continuation indent for function parameters")
+		let tree = try SyntaxTree(string: badlyIndentedCode)
+		let reindented = try tree.reindent(indentSize: 4)
+		let result = reindented.serializeToCode()
+
+		// Check that else-if is properly formatted without extra spaces
+		#expect(result.contains("        } else if number < 0 {"))
+		#expect(!result.contains("} else             if number < 0 {"))
+
+		// Check proper indentation levels
+		#expect(result.contains("    var result: [Int] = []"))
+		#expect(result.contains("    for number in numbers {"))
+		#expect(result.contains("        if number > 0 {"))
+		#expect(result.contains("            result.append(number * 2)"))
+		#expect(result.contains("        } else if number < 0 {"))
+		#expect(result.contains("            result.append(abs(number))"))
+		#expect(result.contains("        } else {"))
+		#expect(result.contains("            result.append(1)"))
+
+		// Check repeat statement indentation
+		#expect(result.contains("    repeat {"))
+		#expect(result.contains("        result.append(0)"))
+		#expect(result.contains("    } while result.count < 10"))
+
+		#expect(result.contains("    return result"))
+	}
+
+	@Test("Continuation indent for function parameters")
     func testContinuationParameters() throws {
-        let code = """
+		let code = """
         public func foo(mainFileURL: URL, physicalFileID: String) throws {
         NSLog("[%@] Create Variant %@", objectID, config.name )
         let (imageData, _) = try self.createVariant(config: config,
@@ -271,21 +271,21 @@ struct IndentationTests {
         }
         """
 
-        let tree = try SyntaxTree(string: code)
-        let reindented = try tree.reindent(indentSize: 4)
-        let result = reindented.serializeToCode()
+		let tree = try SyntaxTree(string: code)
+		let reindented = try tree.reindent(indentSize: 4)
+		let result = reindented.serializeToCode()
 
-        let lines = result.split(separator: "\n", omittingEmptySubsequences: false)
-        let configIndex = lines.firstIndex { $0.contains("config: config") }!
-        let nextLine = lines[configIndex + 1]
-        #expect(nextLine.trimmingCharacters(in: .whitespaces).hasPrefix("inputURL:"))
-        let indentCount = nextLine.prefix { $0 == " " }.count
-        #expect(indentCount > 0)
-    }
+		let lines = result.split(separator: "\n", omittingEmptySubsequences: false)
+		let configIndex = lines.firstIndex { $0.contains("config: config") }!
+		let nextLine = lines[configIndex + 1]
+		#expect(nextLine.trimmingCharacters(in: .whitespaces).hasPrefix("inputURL:"))
+		let indentCount = nextLine.prefix { $0 == " " }.count
+		#expect(indentCount > 0)
+	}
 
-    @Test("Continuation indent for collection literals")
+	@Test("Continuation indent for collection literals")
     func testContinuationCollections() throws {
-        let code = """
+		let code = """
         public func demo() {
         let numbers = [
         1,
@@ -299,22 +299,22 @@ struct IndentationTests {
         }
         """
 
-        let tree = try SyntaxTree(string: code)
-        let reindented = try tree.reindent(indentSize: 4)
-        let result = reindented.serializeToCode()
+		let tree = try SyntaxTree(string: code)
+		let reindented = try tree.reindent(indentSize: 4)
+		let result = reindented.serializeToCode()
 
-        let collectionLines = result.split(separator: "\n", omittingEmptySubsequences: false)
-        let arrayIndex = collectionLines.firstIndex { $0.contains("let numbers = [") }!
-        let arrayLine1 = String(collectionLines[arrayIndex + 1])
-        #expect(arrayLine1.trimmingCharacters(in: .whitespaces).hasPrefix("1,"))
-        let dictIndex = collectionLines.firstIndex { $0.contains("let dict = [") }!
-        let dictLine1 = String(collectionLines[dictIndex + 1])
-        #expect(dictLine1.trimmingCharacters(in: .whitespaces).hasPrefix("\"a\":"))
-    }
+		let collectionLines = result.split(separator: "\n", omittingEmptySubsequences: false)
+		let arrayIndex = collectionLines.firstIndex { $0.contains("let numbers = [") }!
+		let arrayLine1 = String(collectionLines[arrayIndex + 1])
+		#expect(arrayLine1.trimmingCharacters(in: .whitespaces).hasPrefix("1,"))
+		let dictIndex = collectionLines.firstIndex { $0.contains("let dict = [") }!
+		let dictLine1 = String(collectionLines[dictIndex + 1])
+		#expect(dictLine1.trimmingCharacters(in: .whitespaces).hasPrefix("\"a\":"))
+	}
 
-    @Test("Package manifest uses block indentation for multiline lists")
+	@Test("Package manifest uses block indentation for multiline lists")
     func testPackageManifestIndentation() throws {
-        let code = """
+		let code = """
         // swift-tools-version: 6.0
         // The swift-tools-version declares the minimum version of Swift required to build this package.
 
@@ -344,7 +344,7 @@ struct IndentationTests {
         )
         """
 
-        let expected = """
+		let expected = """
         // swift-tools-version: 6.0
         // The swift-tools-version declares the minimum version of Swift required to build this package.
 
@@ -374,10 +374,10 @@ struct IndentationTests {
         )
         """
 
-        let tree = try SyntaxTree(string: code)
-        let reindented = try tree.reindent(indentSize: 4)
-        let result = reindented.serializeToCode()
+		let tree = try SyntaxTree(string: code)
+		let reindented = try tree.reindent(indentSize: 4)
+		let result = reindented.serializeToCode()
 
-        #expect(result == expected)
-    }
+		#expect(result == expected)
+	}
 }

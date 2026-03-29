@@ -16,23 +16,23 @@ import Foundation
 /// ```
 public enum VisibilityLevel: String, CaseIterable {
 
-// Cases
+	// Cases
 
-/// Private access restricts the use of an entity to the enclosing declaration.
-    case `private`
+	/// Private access restricts the use of an entity to the enclosing declaration.
+	case `private`
 
-/// File-private access restricts the use of an entity to its own defining source file.
-    case `fileprivate`
+	/// File-private access restricts the use of an entity to its own defining source file.
+	case `fileprivate`
 
-/// Internal access is the default access level and enables entities to be used within any source file from their defining module.
-    case `internal`
+	/// Internal access is the default access level and enables entities to be used within any source file from their defining module.
+	case `internal`
 
-/// Package access enables entities to be used within any source file from their defining package.
-    case `package`
+	/// Package access enables entities to be used within any source file from their defining package.
+	case `package`
 
-/// Public access enables entities to be used within any source file from their defining module, and also in a source file from another module that imports the defining module.
-    case `public`
+	/// Public access enables entities to be used within any source file from their defining module, and also in a source file from another module that imports the defining module.
+	case `public`
 
-/// Open access is the highest (least restrictive) access level and enables entities to be used and subclassed/overridden outside of their defining module.
-    case `open`
+	/// Open access is the highest (least restrictive) access level and enables entities to be used and subclassed/overridden outside of their defining module.
+	case `open`
 }
