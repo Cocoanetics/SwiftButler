@@ -1,43 +1,35 @@
+---
 name: Swift
-
 on:
   push:
-    branches: ["main"]
+    branches:
+      - main
   pull_request:
-    branches: ["main"]
+    branches:
+      - main
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   build-macos:
     runs-on: macos-latest
-
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
-      
-      - name: Setup Swift 6.0
-        uses: swift-actions/setup-swift@v2.2.0
-        with:
-          swift-version: "6.0"
-
+      - uses: actions/checkout@v6
       - name: Verify Swift version
         run: swift --version
-      
-      - name: Build & Test (macOS)
-        run: swift test
+      - name: Build (macOS)
+        run: swift build --build-tests -v
+      - name: Test (macOS)
+        run: swift test -v --skip-build
 
   build-linux:
     runs-on: ubuntu-latest
-
     steps:
-      - uses: actions/checkout@v4
-      
-      - name: Setup Swift 6.0
-        uses: swift-actions/setup-swift@v2.2.0
-        with:
-          swift-version: "6.0"
-
+      - uses: actions/checkout@v6
       - name: Verify Swift version
         run: swift --version
-      
-      - name: Build & Test (Linux)
-        run: swift test
-
+      - name: Build (Linux)
+        run: swift build --build-tests -v
+      - name: Test (Linux)
+        run: swift test -v --skip-build
