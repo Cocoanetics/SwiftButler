@@ -1,5 +1,9 @@
 # SwiftButler
 
+<p align="center">
+  <img src="Assets/SwiftButler_logo.jpg" alt="SwiftButler logo" width="320">
+</p>
+
 SwiftButler uses SwiftSyntax to parse Swift code into syntax trees and turn large, noisy Swift codebases into smaller, more useful working surfaces for humans and coding agents.
 
 It is built around three practical jobs:
