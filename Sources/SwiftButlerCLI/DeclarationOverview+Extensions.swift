@@ -1,4 +1,3 @@
-import Foundation
 import SwiftButler
 
 extension DeclarationOverview {
@@ -48,4 +47,4 @@ extension DeclarationOverview {
 
 		return dict
 	}
-} 
+}

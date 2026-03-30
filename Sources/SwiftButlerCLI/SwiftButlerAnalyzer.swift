@@ -35,7 +35,7 @@ final class SwiftButlerAnalyzer {
 		return try await processFiles(relevantFiles)
 	}
 
-	private func discoverFiles() throws -> [URL] {
+	internal func discoverFiles() throws -> [URL] {
 		var allFileURLs: [URL] = []
 
 		for inputPath in paths {
@@ -90,7 +90,7 @@ final class SwiftButlerAnalyzer {
 		return allFileURLs.sorted { $0.path < $1.path }
 	}
 
-	private func processFiles(_ fileURLs: [URL]) async throws -> String {
+	internal func processFiles(_ fileURLs: [URL]) async throws -> String {
 		if fileURLs.count == 1 {
 			return try processSingleFile(fileURLs[0])
 		} else {
@@ -98,7 +98,7 @@ final class SwiftButlerAnalyzer {
 		}
 	}
 
-	private func processSingleFile(_ fileURL: URL) throws -> String {
+	internal func processSingleFile(_ fileURL: URL) throws -> String {
 		let tree = try SyntaxTree(url: fileURL)
 		let overview = CodeOverview(tree: tree, minVisibility: visibility)
 
@@ -114,7 +114,7 @@ final class SwiftButlerAnalyzer {
 		}
 	}
 
-	private func processMultipleFiles(_ fileURLs: [URL]) throws -> String {
+	internal func processMultipleFiles(_ fileURLs: [URL]) throws -> String {
 		let projectOverview = try ProjectOverview(
 			fileURLs: fileURLs,
 			minVisibility: visibility
@@ -122,7 +122,7 @@ final class SwiftButlerAnalyzer {
 		return try projectOverview.generateOverview(format: format)
 	}
 
-	private func hasMatchingDeclarations(_ fileURL: URL, minVisibility: VisibilityLevel) -> Bool {
+	internal func hasMatchingDeclarations(_ fileURL: URL, minVisibility: VisibilityLevel) -> Bool {
 		do {
 			let tree = try SyntaxTree(url: fileURL)
 			let overview = CodeOverview(tree: tree, minVisibility: minVisibility)
@@ -131,4 +131,4 @@ final class SwiftButlerAnalyzer {
 			return false
 		}
 	}
-} 
+}
