@@ -13,7 +13,7 @@ It is built around four practical jobs:
 - `reindent`: normalize Swift indentation with spaces or tabs so generated or patched code becomes consistent again
 - `distribute`: split large generated files into one file per declaration, including separate protocol conformance extensions, so agents have less code to scan
 
-Detailed CLI usage lives in [CLI.md](/Users/oliver/Developer/SAAE/CLI.md).
+Detailed CLI usage lives in [CLI.md](CLI.md).
 
 ## Why SwiftButler
 
